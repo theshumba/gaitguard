@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GaitGuard — AI-Powered Equine Gait Monitoring</title>
+    <meta name="description" content="Continuous AI gait monitoring for racing yards and equestrian operations. Every horse. Every day. No manual recording.">
+    <meta property="og:title" content="GaitGuard — AI-Powered Equine Gait Monitoring">
+    <meta property="og:description" content="Detect lameness before it becomes visible. Continuous AI gait analysis for your yard.">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --white: #FFFFFF;
+            --off-white: #FAFBFA;
+            --gray-50: #F4F5F4;
+            --gray-100: #E8EAE8;
+            --gray-200: #D1D5D3;
+            --gray-400: #8A918C;
+            --gray-500: #6B736E;
+            --gray-700: #3C413D;
+            --gray-900: #1A1D1B;
+            --teal: #03594F;
+            --teal-dark: #024840;
+            --teal-light: #E6F2F0;
+            --teal-mid: #0A7A6D;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--white);
+            color: var(--gray-700);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* ==================== NAV ==================== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 0 3rem;
+            height: 72px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .nav-logo {
+            font-family: 'DM Serif Display', serif;
+            font-weight: 400;
+            font-size: 1.4rem;
+            color: var(--gray-900);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-logo span { color: var(--teal); }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--gray-500);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--gray-900); }
+
+        .nav-cta {
+            padding: 0.55rem 1.6rem;
+            background: var(--teal);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-cta:hover { background: var(--teal-dark); }
+
+        /* ==================== HERO ==================== */
+        .hero {
+            padding: 10rem 3rem 5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: var(--teal-light);
+            color: var(--teal);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-family: 'DM Serif Display', serif;
+            font-weight: 400;
+            font-size: clamp(2.8rem, 5.5vw, 4.5rem);
+            line-height: 1.1;
+            color: var(--gray-900);
+            max-width: 820px;
+            margin: 0 auto 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: var(--teal);
+        }
+
+        .hero-sub {
+            font-size: 1.15rem;
+            font-weight: 400;
+            color: var(--gray-500);
+            max-width: 560px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 2.2rem;
+            background: var(--teal);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover { background: var(--teal-dark); transform: translateY(-1px); }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.85rem 2.2rem;
+            background: var(--gray-50);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-200);
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover { background: var(--gray-100); border-color: var(--gray-200); }
+
+        /* HERO VIDEO */
+        .hero-video {
+            max-width: 960px;
+            margin: 0 auto;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            background: var(--gray-50);
+            aspect-ratio: 16 / 9;
+            position: relative;
+        }
+
+        .hero-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .hero-video .video-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--teal-light) 0%, var(--gray-50) 100%);
+            color: var(--teal);
+            font-size: 1rem;
+            gap: 0.75rem;
+        }
+
+        .hero-video .video-placeholder svg { opacity: 0.5; }
+        .hero-video .video-placeholder span { opacity: 0.6; font-size: 0.85rem; }
+
+        /* ==================== STATS BAR ==================== */
+        .stats-bar {
+            padding: 3rem 3rem;
+            background: var(--off-white);
+            border-top: 1px solid var(--gray-100);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .stats-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .stat { text-align: center; }
+
+        .stat-number {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: var(--gray-900);
+            line-height: 1.1;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray-400);
+            font-weight: 400;
+        }
+
+        /* ==================== SECTIONS ==================== */
+        .section {
+            padding: 6rem 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-center { text-align: center; }
+
+        .section-label {
+            display: inline-block;
+            padding: 0.35rem 0.9rem;
+            background: var(--teal-light);
+            color: var(--teal);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 1.25rem;
+        }
+
+        .section-title {
+            font-family: 'DM Serif Display', serif;
+            font-weight: 400;
+            font-size: clamp(2rem, 3.5vw, 2.75rem);
+            line-height: 1.15;
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        .section-subtitle {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--gray-500);
+            max-width: 560px;
+            line-height: 1.7;
+            margin-bottom: 3.5rem;
+        }
+
+        .section-center .section-subtitle {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ==================== PROBLEM ==================== */
+        .problem-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .problem-card {
+            background: var(--white);
+            border: 1px solid var(--gray-100);
+            border-radius: 14px;
+            padding: 2rem 1.75rem;
+            transition: all 0.25s;
+        }
+
+        .problem-card:hover {
+            border-color: var(--gray-200);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .problem-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--teal-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .problem-card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            color: var(--gray-900);
+        }
+
+        .problem-card p {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            font-weight: 400;
+            line-height: 1.65;
+        }
+
+        /* ==================== HOW IT WORKS ==================== */
+        .how-section {
+            background: var(--off-white);
+            border-top: 1px solid var(--gray-100);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .how-inner {
+            padding: 6rem 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            position: relative;
+        }
+
+        .step { position: relative; }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: var(--teal);
+            color: var(--white);
+            border-radius: 50%;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+
+        .step h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.65rem;
+            color: var(--gray-900);
+        }
+
+        .step p {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            font-weight: 400;
+            line-height: 1.7;
+        }
+
+        /* ==================== BANNER SECTION ==================== */
+        .banner-section {
+            background: var(--gray-900);
+            padding: 5rem 3rem;
+            margin: 4rem 0;
+        }
+
+        .banner-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .banner-content {
+            margin-bottom: 3.5rem;
+        }
+
+        .banner-section .section-label {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .banner-title {
+            font-family: 'DM Serif Display', serif;
+            font-weight: 400;
+            font-size: clamp(2rem, 3.5vw, 2.75rem);
+            line-height: 1.15;
+            color: var(--white);
+            max-width: 600px;
+            margin-bottom: 1.25rem;
+            letter-spacing: -0.01em;
+        }
+
+        .banner-sub {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.55);
+            max-width: 580px;
+            line-height: 1.7;
+        }
+
+        .banner-features {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .banner-feature-number {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.5rem;
+            font-weight: 400;
+            color: var(--white);
+            line-height: 1.1;
+            margin-bottom: 0.5rem;
+        }
+
+        .banner-feature-label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.45);
+            line-height: 1.5;
+        }
+
+        /* ==================== DETECTION GRID ==================== */
+        .detect-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .detect-card {
+            background: var(--white);
+            border: 1px solid var(--gray-100);
+            border-radius: 14px;
+            padding: 2rem 1.75rem;
+            transition: all 0.25s;
+        }
+
+        .detect-card:hover {
+            border-color: var(--gray-200);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+        }
+
+        .detect-icon {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--teal);
+            display: inline-block;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        .detect-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--gray-900);
+        }
+
+        .detect-card p {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            font-weight: 400;
+            line-height: 1.65;
+        }
+
+        /* ==================== COMPARISON ==================== */
+        .comparison-section {
+            background: var(--off-white);
+            border-top: 1px solid var(--gray-100);
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .comparison-inner {
+            padding: 6rem 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .comparison-table {
+            background: var(--white);
+            border: 1px solid var(--gray-100);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            text-align: left;
+            padding: 1.15rem 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--gray-400);
+            border-bottom: 1px solid var(--gray-100);
+            background: var(--off-white);
+        }
+
+        .comparison-table th:last-child {
+            color: var(--teal);
+            background: var(--teal-light);
+        }
+
+        .comparison-table td {
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            font-weight: 400;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .comparison-table tr:last-child td { border-bottom: none; }
+
+        .comparison-table td:first-child {
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .comparison-table td:last-child {
+            color: var(--teal);
+            font-weight: 500;
+        }
+
+        /* ==================== CTA ==================== */
+        .cta-section {
+            padding: 6rem 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .cta-box {
+            text-align: center;
+            background: var(--gray-900);
+            border-radius: 20px;
+            padding: 4.5rem 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(3, 89, 79, 0.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta-box .section-label {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .cta-box .section-title {
+            color: var(--white);
+            max-width: 500px;
+            margin: 0 auto 0.75rem;
+        }
+
+        .cta-box .section-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0 auto 2.5rem;
+        }
+
+        .cta-box .btn-primary {
+            background: var(--white);
+            color: var(--gray-900);
+            font-weight: 600;
+        }
+
+        .cta-box .btn-primary:hover { background: var(--gray-100); }
+
+        .cta-contact {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .cta-contact a {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .cta-contact a:hover { color: rgba(255, 255, 255, 0.8); }
+
+        /* ==================== CONTACT FORM ==================== */
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-width: 480px;
+            margin: 0 auto 1.5rem;
+            text-align: left;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .contact-form input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: var(--white);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .contact-form input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .contact-form input:focus {
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .contact-form input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .contact-form input[type="number"]::-webkit-inner-spin-button,
+        .contact-form input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+
+        @media (max-width: 900px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+
+        /* ==================== FOOTER ==================== */
+        footer {
+            padding: 2.5rem 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--gray-100);
+        }
+
+        .footer-left {
+            font-size: 0.8rem;
+            color: var(--gray-400);
+        }
+
+        .footer-right {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-right a {
+            font-size: 0.8rem;
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-right a:hover { color: var(--gray-700); }
+
+        /* ==================== ANIMATIONS ==================== */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 900px) {
+            nav { padding: 0 1.5rem; }
+            .nav-links { display: none; }
+            .hero { padding: 7.5rem 1.5rem 3.5rem; }
+            .hero h1 { font-size: 2.4rem; }
+            .stats-inner { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+            .section, .how-inner, .comparison-inner { padding: 4rem 1.5rem; }
+            .problem-grid { grid-template-columns: 1fr; }
+            .steps { grid-template-columns: 1fr; gap: 2rem; }
+            .banner-section { padding: 3.5rem 1.5rem; }
+            .banner-features { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+            .detect-grid { grid-template-columns: 1fr; }
+            .comparison-table { overflow-x: auto; }
+            .comparison-table table { min-width: 580px; }
+            .cta-box { padding: 3rem 1.5rem; }
+            .cta-section { padding: 4rem 1.5rem; }
+            footer { flex-direction: column; gap: 0.75rem; text-align: center; padding: 2rem 1.5rem; }
+            .footer-right { justify-content: center; }
+        }
+
+        @media (max-width: 480px) {
+            .hero { padding: 6.5rem 1.25rem 3rem; }
+            .hero h1 { font-size: 2rem; }
+            .stats-inner { grid-template-columns: 1fr 1fr; }
+            .stat-number { font-size: 2rem; }
+            .hero-video { border-radius: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <nav>
+        <a href="#" class="nav-logo">Gait<span>Guard</span></a>
+        <div class="nav-links">
+            <a href="#how">How It Works</a>
+            <a href="#detection">Detection</a>
+            <a href="#compare">Compare</a>
+        </div>
+        <a href="#contact" class="nav-cta">Get Started</a>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-badge">AI-Powered Equine Gait Analysis</div>
+        <h1>Detect lameness <em>before</em> it becomes visible</h1>
+        <p class="hero-sub">Continuous gait monitoring for racing yards and equestrian operations. One camera. Every horse. Every day.</p>
+        <div class="hero-actions">
+            <a href="#contact" class="btn-primary">
+                Book a Free Trial
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="#how" class="btn-secondary">See How It Works</a>
+        </div>
+
+        <!-- HERO VIDEO -->
+        <div class="hero-video">
+            <video autoplay muted loop playsinline>
+                <source src="hero-video.mp4" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-bar">
+        <div class="stats-inner">
+            <div class="stat fade-in">
+                <div class="stat-number">62%</div>
+                <div class="stat-label">Vet agreement on mild lameness</div>
+            </div>
+            <div class="stat fade-in">
+                <div class="stat-number">50%</div>
+                <div class="stat-label">Of yards report lameness yearly</div>
+            </div>
+            <div class="stat fade-in">
+                <div class="stat-number">65%</div>
+                <div class="stat-label">Of lost days from locomotor issues</div>
+            </div>
+            <div class="stat fade-in">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Automated monitoring</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROBLEM -->
+    <div class="section fade-in">
+        <div class="section-label">The Problem</div>
+        <h2 class="section-title">Mild lameness is invisible to the human eye</h2>
+        <p class="section-subtitle">Veterinarians only agree 62% of the time when assessing subtle lameness. By the time it is visible, the damage is already done.</p>
+        <div class="problem-grid">
+            <div class="problem-card">
+                <div class="problem-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#03594F" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <h3>Subjective Assessment</h3>
+                <p>The human eye cannot reliably detect gait asymmetries below 3-5mm. Grade 1-2 lameness is missed consistently, even by experienced practitioners.</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#03594F" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <h3>Infrequent Monitoring</h3>
+                <p>Vet assessments happen periodically. A horse can develop and worsen between visits. Daily changes go entirely untracked.</p>
+            </div>
+            <div class="problem-card">
+                <div class="problem-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#03594F" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <h3>Late Detection</h3>
+                <p>By the time lameness is visible, the condition has progressed significantly. Early intervention saves months of rehabilitation and thousands in lost potential.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="how-section" id="how">
+        <div class="how-inner">
+            <div class="section-center fade-in">
+                <div class="section-label">How It Works</div>
+                <h2 class="section-title" style="max-width:600px;margin-left:auto;margin-right:auto;">Set it once. Monitor every stride.</h2>
+                <p class="section-subtitle">A single camera mounted at your horse walker captures every horse, every session. Our AI analyses movement and flags changes automatically.</p>
+            </div>
+            <div class="steps fade-in">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>We install a camera</h3>
+                    <p>One weatherproof camera is mounted at your horse walker or trot-up area. We handle hardware, connectivity, and calibration. It takes 30 minutes.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>AI analyses every stride</h3>
+                    <p>Computer vision tracks anatomical keypoints on every horse as they move. Head nod, pelvic symmetry, stride length, and temporal patterns — measured stride by stride.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>You get alerted early</h3>
+                    <p>Each horse builds a personal baseline. When gait asymmetry increases beyond their normal range, you receive an alert before it becomes a clinical problem.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FULL-WIDTH FEATURE BANNER -->
+    <div class="banner-section" id="detection">
+        <div class="banner-inner fade-in">
+            <div class="banner-content">
+                <div class="section-label">What Sets Us Apart</div>
+                <h2 class="banner-title">Every stride measured. Every change caught.</h2>
+                <p class="banner-sub">Our AI tracks over 30 anatomical keypoints on every horse, detecting asymmetries the human eye simply cannot see. No sensors attached to the horse. No one holding a phone. Just a camera that watches, learns, and alerts.</p>
+            </div>
+            <div class="banner-features">
+                <div class="banner-feature">
+                    <div class="banner-feature-number">30+</div>
+                    <div class="banner-feature-label">Anatomical keypoints tracked per horse</div>
+                </div>
+                <div class="banner-feature">
+                    <div class="banner-feature-number">&lt;2mm</div>
+                    <div class="banner-feature-label">Gait asymmetry detection precision</div>
+                </div>
+                <div class="banner-feature">
+                    <div class="banner-feature-number">0</div>
+                    <div class="banner-feature-label">Sensors or markers needed on the horse</div>
+                </div>
+                <div class="banner-feature">
+                    <div class="banner-feature-number">24/7</div>
+                    <div class="banner-feature-label">Continuous automated monitoring</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WHAT WE MONITOR -->
+    <div class="section fade-in">
+        <div class="section-center">
+            <div class="section-label">Monitoring</div>
+            <h2 class="section-title" style="max-width:600px;margin-left:auto;margin-right:auto;">What GaitGuard tracks</h2>
+            <p class="section-subtitle">Continuous biomechanical analysis across multiple gait parameters, compared against each horse's own baseline.</p>
+        </div>
+        <div class="detect-grid">
+            <div class="detect-card">
+                <h3><span class="detect-icon"></span>Gait Asymmetry</h3>
+                <p>Vertical head and pelvic displacement measured to sub-millimetre precision. Forelimb and hindlimb lameness differentiated automatically.</p>
+            </div>
+            <div class="detect-card">
+                <h3><span class="detect-icon"></span>Stride Regularity</h3>
+                <p>Stride length, duration, and stance/swing phase timing tracked across every session. Irregularities flagged against historical data.</p>
+            </div>
+            <div class="detect-card">
+                <h3><span class="detect-icon"></span>Trend Detection</h3>
+                <p>Gradual changes over days and weeks that are impossible to see with the eye. A horse becoming 2% more asymmetric each week is caught early.</p>
+            </div>
+            <div class="detect-card">
+                <h3><span class="detect-icon"></span>Individual Baselines</h3>
+                <p>Every horse has a unique movement signature. GaitGuard learns each horse's normal gait and alerts only when something genuinely changes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPARISON -->
+    <div class="comparison-section" id="compare">
+        <div class="comparison-inner fade-in">
+            <div class="section-center">
+                <div class="section-label">Compare</div>
+                <h2 class="section-title" style="max-width:650px;margin-left:auto;margin-right:auto;">Continuous monitoring vs. periodic assessment</h2>
+                <p class="section-subtitle">Existing methods require manual effort for each horse. GaitGuard runs every day with zero intervention.</p>
+            </div>
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Visual Assessment</th>
+                            <th>Smartphone Apps</th>
+                            <th>GaitGuard</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Monitoring frequency</td>
+                            <td>When vet visits</td>
+                            <td>When someone films</td>
+                            <td>Every day, automatically</td>
+                        </tr>
+                        <tr>
+                            <td>Manual effort</td>
+                            <td>Vet watches each horse trot</td>
+                            <td>Hold phone, film each horse</td>
+                            <td>None — set and forget</td>
+                        </tr>
+                        <tr>
+                            <td>Horses per session</td>
+                            <td>One at a time</td>
+                            <td>One at a time</td>
+                            <td>All horses on the walker</td>
+                        </tr>
+                        <tr>
+                            <td>Detects subtle changes</td>
+                            <td>No — 62% agreement on mild</td>
+                            <td>Yes — requires active recording</td>
+                            <td>Yes — automatically</td>
+                        </tr>
+                        <tr>
+                            <td>Tracks trends over time</td>
+                            <td>No</td>
+                            <td>Limited</td>
+                            <td>Continuous baseline comparison</td>
+                        </tr>
+                        <tr>
+                            <td>Hardware required</td>
+                            <td>None</td>
+                            <td>iPhone + subscription</td>
+                            <td>One camera, installed in 30 minutes</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section" id="contact">
+        <div class="cta-box fade-in">
+            <div class="section-label">Get Started</div>
+            <h2 class="section-title">Trial GaitGuard at your yard</h2>
+            <p class="section-subtitle">We are onboarding a limited number of founding yards for a free 4-week trial. No commitment. No risk. We install the camera and show you the results.</p>
+
+            <form class="contact-form" action="https://formsubmit.co/melusi@gaitguard.co.uk" method="POST">
+                <input type="hidden" name="_subject" value="GaitGuard — New Enquiry">
+                <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" name="_next" value="https://gaitguard.co.uk">
+                <div class="form-row">
+                    <input type="text" name="name" placeholder="Your name" required>
+                    <input type="text" name="yard" placeholder="Yard name">
+                </div>
+                <div class="form-row">
+                    <input type="tel" name="phone" placeholder="Phone number" required>
+                    <input type="number" name="horses" placeholder="Number of horses" min="1">
+                </div>
+                <input type="email" name="email" placeholder="Email address" required>
+                <button type="submit" class="btn-primary" style="width:100%;justify-content:center;">
+                    Request a Free Trial
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </button>
+            </form>
+
+            <div class="cta-contact">
+                <a href="mailto:melusi@gaitguard.co.uk">melusi@gaitguard.co.uk</a>
+                <a href="tel:+447399236702">+44 7399 236 702</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-left">&copy; 2026 GaitGuard. All rights reserved.</div>
+        <div class="footer-right">
+            <a href="mailto:melusi@gaitguard.co.uk">Contact</a>
+            <a href="#how">How It Works</a>
+            <a href="#detection">Detection</a>
+        </div>
+    </footer>
+
+    <!-- SCROLL ANIMATIONS -->
+    <script>
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    </script>
+
+</body>
+</html>

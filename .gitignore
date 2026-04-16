@@ -1,0 +1,7 @@
+venv/
+*.pt
+input-converted.mp4
+process_video.py
+gaitguard-demo.mp4
+__pycache__/
+.DS_Store
