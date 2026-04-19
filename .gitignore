@@ -3,5 +3,7 @@ venv/
 input-converted.mp4
 process_video.py
 gaitguard-demo.mp4
+hero-video.mp4
 __pycache__/
 .DS_Store
+yolov8n.pt

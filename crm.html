@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GaitGuard CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --teal: #03594F;
+            --teal-light: #E6F2F0;
+            --white: #FFFFFF;
+            --gray-50: #F8F9F8;
+            --gray-100: #E8EAE8;
+            --gray-200: #D1D5D3;
+            --gray-400: #8A918C;
+            --gray-500: #6B736E;
+            --gray-700: #3C413D;
+            --gray-900: #1A1D1B;
+            --green: #16a34a;
+            --amber: #d97706;
+            --red: #dc2626;
+            --blue: #2563eb;
+        }
+        body { font-family: 'DM Sans', sans-serif; background: var(--gray-50); color: var(--gray-900); }
+
+        /* NAV */
+        .nav { background: var(--gray-900); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .nav h1 { color: var(--white); font-size: 1.2rem; font-weight: 600; }
+        .nav-stats { display: flex; gap: 2rem; }
+        .nav-stat { text-align: center; }
+        .nav-stat-num { color: var(--white); font-size: 1.4rem; font-weight: 700; }
+        .nav-stat-label { color: var(--gray-400); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* MAIN */
+        .main { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+        /* FILTERS */
+        .filters { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .filter-btn { padding: 0.5rem 1rem; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--white); font-size: 0.85rem; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .filter-btn:hover { border-color: var(--teal); }
+        .filter-btn.active { background: var(--teal); color: var(--white); border-color: var(--teal); }
+
+        /* ADD LEAD FORM */
+        .add-section { background: var(--white); border: 1px solid var(--gray-100); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; }
+        .add-section h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; color: var(--gray-700); }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+        .form-grid input, .form-grid select, .form-grid textarea {
+            padding: 0.6rem 0.8rem; border: 1px solid var(--gray-200); border-radius: 8px;
+            font-family: inherit; font-size: 0.85rem; outline: none; transition: border-color 0.15s;
+        }
+        .form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus { border-color: var(--teal); }
+        .form-grid textarea { grid-column: 1 / -1; resize: vertical; min-height: 60px; }
+        .add-btn { padding: 0.6rem 1.5rem; background: var(--teal); color: var(--white); border: none; border-radius: 8px; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; margin-top: 0.75rem; }
+        .add-btn:hover { background: #024840; }
+
+        /* TABLE */
+        .table-wrap { background: var(--white); border: 1px solid var(--gray-100); border-radius: 12px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 0.75rem 1rem; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-400); background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
+        td { padding: 0.75rem 1rem; font-size: 0.85rem; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: var(--gray-50); }
+
+        /* STATUS BADGES */
+        .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: 500; }
+        .badge-new { background: #dbeafe; color: var(--blue); }
+        .badge-called { background: #fef3c7; color: var(--amber); }
+        .badge-interested { background: #d1fae5; color: var(--green); }
+        .badge-visit-booked { background: var(--teal-light); color: var(--teal); }
+        .badge-trial { background: #c7d2fe; color: #4338ca; }
+        .badge-paying { background: #bbf7d0; color: #15803d; }
+        .badge-rejected { background: #fee2e2; color: var(--red); }
+        .badge-callback { background: #fef3c7; color: var(--amber); }
+
+        /* ACTIONS */
+        .actions { display: flex; gap: 0.35rem; }
+        .action-btn { padding: 0.3rem 0.5rem; border: 1px solid var(--gray-200); border-radius: 6px; background: var(--white); font-size: 0.75rem; cursor: pointer; font-family: inherit; }
+        .action-btn:hover { background: var(--gray-50); border-color: var(--gray-400); }
+        .action-btn.delete { color: var(--red); }
+        .action-btn.delete:hover { background: #fee2e2; }
+
+        /* LEAD NAME */
+        .lead-name { font-weight: 600; }
+        .lead-yard { font-size: 0.8rem; color: var(--gray-500); }
+
+        /* NOTES */
+        .note-text { font-size: 0.8rem; color: var(--gray-500); max-width: 200px; }
+
+        /* FOLLOW UP DATE */
+        .follow-up { font-size: 0.8rem; }
+        .follow-up.overdue { color: var(--red); font-weight: 600; }
+        .follow-up.today { color: var(--amber); font-weight: 600; }
+        .follow-up.upcoming { color: var(--gray-500); }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .nav { flex-direction: column; gap: 1rem; }
+            .nav-stats { gap: 1rem; }
+            .main { padding: 1rem; }
+            .table-wrap { overflow-x: auto; }
+            table { min-width: 900px; }
+        }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: var(--white); border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 500px; }
+        .modal h3 { margin-bottom: 1rem; }
+        .modal .form-grid { grid-template-columns: 1fr 1fr; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+
+        /* SEARCH */
+        .search-box { padding: 0.6rem 1rem; border: 1px solid var(--gray-200); border-radius: 8px; font-family: inherit; font-size: 0.85rem; width: 250px; outline: none; }
+        .search-box:focus { border-color: var(--teal); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; }
+
+        /* EXPORT */
+        .export-btn { padding: 0.5rem 1rem; border: 1px solid var(--gray-200); border-radius: 8px; background: var(--white); font-size: 0.85rem; cursor: pointer; font-family: inherit; }
+        .export-btn:hover { background: var(--gray-50); }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <h1>GaitGuard CRM</h1>
+    <div class="nav-stats">
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-total">0</div>
+            <div class="nav-stat-label">Total Leads</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-called">0</div>
+            <div class="nav-stat-label">Called</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-interested">0</div>
+            <div class="nav-stat-label">Interested</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-visits">0</div>
+            <div class="nav-stat-label">Visits Booked</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-trials">0</div>
+            <div class="nav-stat-label">Trials</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-paying">0</div>
+            <div class="nav-stat-label">Paying</div>
+        </div>
+    </div>
+</nav>
+
+<div class="main">
+    <!-- QUICK ADD BY URL -->
+    <div class="add-section" style="border-left: 3px solid var(--teal);">
+        <h3>Quick Add — Paste a Website</h3>
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+            <input type="text" id="quick-url" placeholder="Paste a website URL (e.g. www.smithracing.co.uk)" style="flex:1;padding:0.7rem 1rem;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:0.9rem;outline:none;">
+            <button class="add-btn" onclick="quickAdd()" id="quick-btn">Scan & Add</button>
+        </div>
+        <div id="quick-status" style="font-size:0.8rem;color:var(--gray-400);margin-top:0.5rem;"></div>
+    </div>
+
+    <!-- ADD LEAD -->
+    <div class="add-section">
+        <h3>Add New Lead</h3>
+        <div class="form-grid">
+            <input type="text" id="add-name" placeholder="Contact name">
+            <input type="text" id="add-yard" placeholder="Yard / business name">
+            <select id="add-category">
+                <option value="">Category...</option>
+                <option value="Racing Trainer">Racing Trainer</option>
+                <option value="Stud Farm">Stud Farm</option>
+                <option value="Livery Yard">Livery Yard</option>
+                <option value="Equestrian Centre">Equestrian Centre</option>
+                <option value="Competition Yard">Competition Yard</option>
+                <option value="Polo Club">Polo Club</option>
+                <option value="Equine Vet">Equine Vet</option>
+                <option value="Rehab Centre">Rehab Centre</option>
+                <option value="Other">Other</option>
+            </select>
+            <input type="text" id="add-phone" placeholder="Phone number">
+            <input type="email" id="add-email" placeholder="Email">
+            <input type="text" id="add-location" placeholder="Location">
+            <input type="number" id="add-horses" placeholder="Number of horses" min="0">
+            <input type="text" id="add-website" placeholder="Website">
+            <textarea id="add-notes" placeholder="Notes..."></textarea>
+        </div>
+        <button class="add-btn" onclick="addLead()">Add Lead</button>
+    </div>
+
+    <!-- FILTERS & SEARCH -->
+    <div class="top-bar">
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+            <button class="filter-btn" data-filter="New" onclick="setFilter('New', this)">New</button>
+            <button class="filter-btn" data-filter="Called" onclick="setFilter('Called', this)">Called</button>
+            <button class="filter-btn" data-filter="Callback" onclick="setFilter('Callback', this)">Callback</button>
+            <button class="filter-btn" data-filter="Interested" onclick="setFilter('Interested', this)">Interested</button>
+            <button class="filter-btn" data-filter="Visit Booked" onclick="setFilter('Visit Booked', this)">Visit Booked</button>
+            <button class="filter-btn" data-filter="Trial" onclick="setFilter('Trial', this)">Trial</button>
+            <button class="filter-btn" data-filter="Paying" onclick="setFilter('Paying', this)">Paying</button>
+            <button class="filter-btn" data-filter="Rejected" onclick="setFilter('Rejected', this)">Rejected</button>
+        </div>
+        <div style="display:flex;gap:0.5rem;">
+            <input type="text" class="search-box" id="search" placeholder="Search leads..." oninput="renderTable()">
+            <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Lead</th>
+                    <th>Category</th>
+                    <th>Phone</th>
+                    <th>Horses</th>
+                    <th>Status</th>
+                    <th>Follow Up</th>
+                    <th>Last Contact</th>
+                    <th>Notes</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+        <h3>Edit Lead</h3>
+        <div class="form-grid">
+            <input type="hidden" id="edit-id">
+            <input type="text" id="edit-name" placeholder="Contact name">
+            <input type="text" id="edit-yard" placeholder="Yard name">
+            <select id="edit-category">
+                <option value="">Category...</option>
+                <option value="Racing Trainer">Racing Trainer</option>
+                <option value="Stud Farm">Stud Farm</option>
+                <option value="Livery Yard">Livery Yard</option>
+                <option value="Equestrian Centre">Equestrian Centre</option>
+                <option value="Competition Yard">Competition Yard</option>
+                <option value="Polo Club">Polo Club</option>
+                <option value="Equine Vet">Equine Vet</option>
+                <option value="Rehab Centre">Rehab Centre</option>
+                <option value="Other">Other</option>
+            </select>
+            <input type="text" id="edit-phone" placeholder="Phone number">
+            <input type="email" id="edit-email" placeholder="Email">
+            <input type="text" id="edit-location" placeholder="Location">
+            <input type="number" id="edit-horses" placeholder="Horses" min="0">
+            <select id="edit-status">
+                <option value="New">New</option>
+                <option value="Called">Called</option>
+                <option value="Callback">Callback</option>
+                <option value="Interested">Interested</option>
+                <option value="Visit Booked">Visit Booked</option>
+                <option value="Trial">Trial</option>
+                <option value="Paying">Paying</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+            <input type="date" id="edit-followup" placeholder="Follow up date">
+            <textarea id="edit-notes" placeholder="Notes..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="action-btn" onclick="closeModal()">Cancel</button>
+            <button class="add-btn" onclick="saveEdit()">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let leads = JSON.parse(localStorage.getItem('gaitguard-leads') || '[]');
+let currentFilter = 'all';
+
+async function quickAdd() {
+    let url = document.getElementById('quick-url').value.trim();
+    if (!url) return;
+    if (!url.startsWith('http')) url = 'https://' + url;
+
+    const status = document.getElementById('quick-status');
+    const btn = document.getElementById('quick-btn');
+    btn.disabled = true;
+    btn.textContent = 'Scanning...';
+    status.textContent = 'Fetching website data...';
+
+    try {
+        const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+        const resp = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) });
+        const html = await resp.text();
+
+        // Parse the HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const text = doc.body ? doc.body.innerText.toLowerCase() : '';
+        const fullHtml = html.toLowerCase();
+
+        // Extract title
+        const titleEl = doc.querySelector('title');
+        let title = titleEl ? titleEl.textContent.trim() : '';
+        // Clean up title — remove " | Home", " - Welcome", etc.
+        title = title.replace(/\s*[\|\-–—]\s*(home|welcome|homepage|official site|official website).*$/i, '').trim();
+
+        // Extract meta description
+        const metaDesc = doc.querySelector('meta[name="description"]');
+        const description = metaDesc ? metaDesc.getAttribute('content') || '' : '';
+
+        // Extract phone numbers (UK formats)
+        const phoneRegex = /(?:(?:\+44|0044|0)\s*\d[\d\s]{8,12}\d)|(?:01\d{2,4}[\s\-]?\d{5,7})|(?:07\d{3}[\s\-]?\d{6})/g;
+        const phones = html.match(phoneRegex) || [];
+        const phone = phones.length > 0 ? phones[0].replace(/\s+/g, ' ').trim() : '';
+
+        // Extract email addresses
+        const emailRegex = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+        const emails = html.match(emailRegex) || [];
+        // Filter out common non-useful emails
+        const filteredEmails = emails.filter(e => !e.includes('example.com') && !e.includes('wordpress') && !e.includes('wix') && !e.includes('sentry'));
+        const email = filteredEmails.length > 0 ? filteredEmails[0] : '';
+
+        // Extract location — look for UK postcodes
+        const postcodeRegex = /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/gi;
+        const postcodes = html.match(postcodeRegex) || [];
+        const postcode = postcodes.length > 0 ? postcodes[0].toUpperCase() : '';
+
+        // Auto-categorize based on keywords
+        let category = 'Other';
+        const keywords = text + ' ' + description.toLowerCase() + ' ' + title.toLowerCase();
+
+        if (/\b(racing|trainer|gallop|national hunt|flat racing|racehorse|training yard)\b/.test(keywords)) {
+            category = 'Racing Trainer';
+        } else if (/\b(stud farm|stud|stallion|breeding|broodmare|foal|sire|covering)\b/.test(keywords)) {
+            category = 'Stud Farm';
+        } else if (/\b(polo|chukka|chukker)\b/.test(keywords)) {
+            category = 'Polo Club';
+        } else if (/\b(livery|liveries|DIY livery|full livery|part livery)\b/.test(keywords)) {
+            category = 'Livery Yard';
+        } else if (/\b(equestrian centre|riding school|riding centre|riding lesson|pony club)\b/.test(keywords)) {
+            category = 'Equestrian Centre';
+        } else if (/\b(showjump|dressage|eventing|competition yard|sport horse)\b/.test(keywords)) {
+            category = 'Competition Yard';
+        } else if (/\b(veterinary|vet practice|equine vet|equine hospital|equine clinic)\b/.test(keywords)) {
+            category = 'Equine Vet';
+        } else if (/\b(rehabilitation|rehab|recovery|physiotherapy|hydrotherapy)\b/.test(keywords)) {
+            category = 'Rehab Centre';
+        } else if (/\b(equine|horse|equestrian|pony|mare|gelding)\b/.test(keywords)) {
+            category = 'Equestrian Centre';
+        }
+
+        // Try to estimate number of horses from text
+        let horses = '';
+        const horseCountMatch = text.match(/(\d{2,3})\s*(?:horse|box|stable|stall)/);
+        if (horseCountMatch) horses = horseCountMatch[1];
+
+        // Extract domain for yard name fallback
+        const domain = new URL(url).hostname.replace('www.', '');
+
+        // Build the lead
+        const lead = {
+            id: Date.now(),
+            name: '',
+            yard: title || domain,
+            category: category,
+            phone: phone,
+            email: email,
+            location: postcode,
+            horses: horses,
+            website: url,
+            notes: description ? description.substring(0, 200) : '',
+            status: 'New',
+            followUp: '',
+            lastContact: '',
+            created: new Date().toISOString().split('T')[0]
+        };
+
+        leads.unshift(lead);
+        save();
+
+        // Report what was found
+        const found = [];
+        if (title) found.push('name');
+        if (phone) found.push('phone');
+        if (email) found.push('email');
+        if (postcode) found.push('location');
+        if (category !== 'Other') found.push('category');
+        if (horses) found.push('horse count');
+
+        status.innerHTML = `<span style="color:var(--green);">Added!</span> Found: ${found.length > 0 ? found.join(', ') : 'basic info only'}. <span style="color:var(--gray-400);">Click Edit to fill in anything missing.</span>`;
+        document.getElementById('quick-url').value = '';
+
+    } catch (err) {
+        // If fetch fails, still add with just the URL
+        const domain = (() => { try { return new URL(url).hostname.replace('www.', ''); } catch(e) { return url; } })();
+        const lead = {
+            id: Date.now(),
+            name: '',
+            yard: domain,
+            category: '',
+            phone: '',
+            email: '',
+            location: '',
+            horses: '',
+            website: url,
+            notes: 'Auto-scan failed — fill in manually',
+            status: 'New',
+            followUp: '',
+            lastContact: '',
+            created: new Date().toISOString().split('T')[0]
+        };
+        leads.unshift(lead);
+        save();
+        status.innerHTML = `<span style="color:var(--amber);">Added with URL only</span> — couldn't scan the site. Click Edit to fill in details.`;
+        document.getElementById('quick-url').value = '';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Scan & Add';
+}
+
+function save() {
+    localStorage.setItem('gaitguard-leads', JSON.stringify(leads));
+    updateStats();
+    renderTable();
+}
+
+function addLead() {
+    const lead = {
+        id: Date.now(),
+        name: document.getElementById('add-name').value.trim(),
+        yard: document.getElementById('add-yard').value.trim(),
+        category: document.getElementById('add-category').value,
+        phone: document.getElementById('add-phone').value.trim(),
+        email: document.getElementById('add-email').value.trim(),
+        location: document.getElementById('add-location').value.trim(),
+        horses: document.getElementById('add-horses').value,
+        website: document.getElementById('add-website').value.trim(),
+        notes: document.getElementById('add-notes').value.trim(),
+        status: 'New',
+        followUp: '',
+        lastContact: '',
+        created: new Date().toISOString().split('T')[0]
+    };
+    if (!lead.name && !lead.yard) return alert('Enter a name or yard name');
+    leads.unshift(lead);
+    save();
+    // Clear form
+    ['add-name','add-yard','add-phone','add-email','add-location','add-horses','add-website','add-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('add-category').selectedIndex = 0;
+}
+
+function deleteLead(id) {
+    if (!confirm('Delete this lead?')) return;
+    leads = leads.filter(l => l.id !== id);
+    save();
+}
+
+function markCalled(id) {
+    const lead = leads.find(l => l.id === id);
+    if (lead) {
+        lead.status = lead.status === 'New' ? 'Called' : lead.status;
+        lead.lastContact = new Date().toISOString().split('T')[0];
+    }
+    save();
+}
+
+function quickStatus(id, status) {
+    const lead = leads.find(l => l.id === id);
+    if (lead) {
+        lead.status = status;
+        lead.lastContact = new Date().toISOString().split('T')[0];
+    }
+    save();
+}
+
+function openEdit(id) {
+    const lead = leads.find(l => l.id === id);
+    if (!lead) return;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-name').value = lead.name;
+    document.getElementById('edit-yard').value = lead.yard;
+    document.getElementById('edit-category').value = lead.category;
+    document.getElementById('edit-phone').value = lead.phone;
+    document.getElementById('edit-email').value = lead.email;
+    document.getElementById('edit-location').value = lead.location;
+    document.getElementById('edit-horses').value = lead.horses;
+    document.getElementById('edit-status').value = lead.status;
+    document.getElementById('edit-followup').value = lead.followUp;
+    document.getElementById('edit-notes').value = lead.notes;
+    document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('edit-modal').classList.remove('open'); }
+
+function saveEdit() {
+    const id = parseInt(document.getElementById('edit-id').value);
+    const lead = leads.find(l => l.id === id);
+    if (!lead) return;
+    lead.name = document.getElementById('edit-name').value.trim();
+    lead.yard = document.getElementById('edit-yard').value.trim();
+    lead.category = document.getElementById('edit-category').value;
+    lead.phone = document.getElementById('edit-phone').value.trim();
+    lead.email = document.getElementById('edit-email').value.trim();
+    lead.location = document.getElementById('edit-location').value.trim();
+    lead.horses = document.getElementById('edit-horses').value;
+    lead.status = document.getElementById('edit-status').value;
+    lead.followUp = document.getElementById('edit-followup').value;
+    lead.notes = document.getElementById('edit-notes').value.trim();
+    closeModal();
+    save();
+}
+
+function setFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTable();
+}
+
+function getFollowUpClass(date) {
+    if (!date) return '';
+    const today = new Date().toISOString().split('T')[0];
+    if (date < today) return 'overdue';
+    if (date === today) return 'today';
+    return 'upcoming';
+}
+
+function formatDate(d) {
+    if (!d) return '';
+    const date = new Date(d + 'T00:00:00');
+    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function renderTable() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const tbody = document.getElementById('table-body');
+
+    let filtered = leads;
+    if (currentFilter !== 'all') filtered = filtered.filter(l => l.status === currentFilter);
+    if (search) filtered = filtered.filter(l =>
+        (l.name + l.yard + l.location + l.notes + l.category + l.phone).toLowerCase().includes(search)
+    );
+
+    tbody.innerHTML = filtered.map(l => `
+        <tr>
+            <td>
+                <div class="lead-name">${l.name || 'Unknown'}</div>
+                <div class="lead-yard">${l.yard || ''}</div>
+            </td>
+            <td><span style="font-size:0.8rem;">${l.category || ''}</span></td>
+            <td><a href="tel:${l.phone}" style="color:var(--teal);text-decoration:none;font-size:0.85rem;">${l.phone || ''}</a></td>
+            <td style="font-size:0.85rem;">${l.horses || ''}</td>
+            <td><span class="badge badge-${l.status.toLowerCase().replace(' ','-')}">${l.status}</span></td>
+            <td><span class="follow-up ${getFollowUpClass(l.followUp)}">${formatDate(l.followUp)}</span></td>
+            <td style="font-size:0.8rem;color:var(--gray-500);">${formatDate(l.lastContact)}</td>
+            <td><div class="note-text">${l.notes || ''}</div></td>
+            <td>
+                <div class="actions">
+                    <button class="action-btn" onclick="openEdit(${l.id})" title="Edit">Edit</button>
+                    <button class="action-btn" onclick="markCalled(${l.id})" title="Mark Called">Called</button>
+                    <button class="action-btn" onclick="quickStatus(${l.id},'Interested')" title="Mark Interested">Int.</button>
+                    <button class="action-btn delete" onclick="deleteLead(${l.id})" title="Delete">X</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateStats() {
+    document.getElementById('stat-total').textContent = leads.length;
+    document.getElementById('stat-called').textContent = leads.filter(l => l.status !== 'New').length;
+    document.getElementById('stat-interested').textContent = leads.filter(l => l.status === 'Interested' || l.status === 'Callback').length;
+    document.getElementById('stat-visits').textContent = leads.filter(l => l.status === 'Visit Booked').length;
+    document.getElementById('stat-trials').textContent = leads.filter(l => l.status === 'Trial').length;
+    document.getElementById('stat-paying').textContent = leads.filter(l => l.status === 'Paying').length;
+}
+
+function exportCSV() {
+    const headers = ['Name','Yard','Category','Phone','Email','Location','Horses','Status','Follow Up','Last Contact','Notes'];
+    const rows = leads.map(l => [l.name,l.yard,l.category,l.phone,l.email,l.location,l.horses,l.status,l.followUp,l.lastContact,l.notes]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'gaitguard-leads.csv'; a.click();
+}
+
+// Init
+save();
+</script>
+
+</body>
+</html>
