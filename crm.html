@@ -74,6 +74,39 @@
         .badge-paying { background: #bbf7d0; color: #15803d; }
         .badge-rejected { background: #fee2e2; color: var(--red); }
         .badge-callback { background: #fef3c7; color: var(--amber); }
+        .badge-email-me { background: #dbeafe; color: var(--blue); }
+        .badge-no-answer { background: #fef3c7; color: var(--amber); }
+
+        /* QUICK STATUS BUTTONS — the 4 big ones per row */
+        .quick-row { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+        .quick-btn {
+            padding: 0.45rem 0.7rem; border: none; border-radius: 8px;
+            font-family: inherit; font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; transition: transform 0.08s, opacity 0.15s;
+            color: white; white-space: nowrap;
+        }
+        .quick-btn:hover { opacity: 0.9; }
+        .quick-btn:active { transform: scale(0.95); }
+        .qb-interested { background: #16a34a; }
+        .qb-email      { background: #2563eb; }
+        .qb-no-answer  { background: #d97706; }
+        .qb-rejected   { background: #dc2626; }
+        .qb-mic        { background: var(--gray-700); }
+        .qb-mic.recording { background: var(--red); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            background: var(--gray-900); color: white;
+            padding: 0.8rem 1.4rem; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+            z-index: 200;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(-6px); }
+        .toast.error { background: var(--red); }
 
         /* ACTIONS */
         .actions { display: flex; gap: 0.35rem; }
@@ -129,38 +162,54 @@
     <div class="nav-stats">
         <div class="nav-stat">
             <div class="nav-stat-num" id="stat-total">0</div>
-            <div class="nav-stat-label">Total Leads</div>
+            <div class="nav-stat-label">Total</div>
         </div>
         <div class="nav-stat">
-            <div class="nav-stat-num" id="stat-called">0</div>
-            <div class="nav-stat-label">Called</div>
-        </div>
-        <div class="nav-stat">
-            <div class="nav-stat-num" id="stat-interested">0</div>
+            <div class="nav-stat-num" id="stat-interested" style="color:#4ade80;">0</div>
             <div class="nav-stat-label">Interested</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-email" style="color:#60a5fa;">0</div>
+            <div class="nav-stat-label">Email Me</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-no-answer" style="color:#fbbf24;">0</div>
+            <div class="nav-stat-label">No Answer</div>
+        </div>
+        <div class="nav-stat">
+            <div class="nav-stat-num" id="stat-rejected" style="color:#f87171;">0</div>
+            <div class="nav-stat-label">Rejected</div>
         </div>
         <div class="nav-stat">
             <div class="nav-stat-num" id="stat-visits">0</div>
             <div class="nav-stat-label">Visits Booked</div>
         </div>
-        <div class="nav-stat">
-            <div class="nav-stat-num" id="stat-trials">0</div>
-            <div class="nav-stat-label">Trials</div>
-        </div>
-        <div class="nav-stat">
-            <div class="nav-stat-num" id="stat-paying">0</div>
-            <div class="nav-stat-label">Paying</div>
-        </div>
     </div>
 </nav>
 
 <div class="main">
-    <!-- QUICK ADD BY URL -->
+    <!-- SMART PASTE / VOICE -->
     <div class="add-section" style="border-left: 3px solid var(--teal);">
-        <h3>Quick Add — Paste a Website</h3>
+        <h3>Paste or Speak — Auto-Extract a Lead</h3>
+        <div style="font-size:0.78rem;color:var(--gray-500);margin-bottom:0.6rem;line-height:1.5;">
+            Paste a Google listing, copy from a website, or tap the mic and just talk.
+            It pulls out the yard name, category, phone, location, and notes for you.
+        </div>
+        <textarea id="smart-input" placeholder="Paste anything here — or tap 🎤 and say something like 'Smith Racing in Newmarket, racing trainer, 30 horses, phone 07700 900123'" style="width:100%;min-height:90px;padding:0.7rem 0.9rem;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:0.9rem;outline:none;resize:vertical;"></textarea>
+        <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.6rem;flex-wrap:wrap;">
+            <button class="add-btn" onclick="smartAdd()">Parse &amp; Add</button>
+            <button class="quick-btn qb-mic" id="smart-mic" onclick="smartVoice()" title="Dictate" style="padding:0.6rem 0.9rem;font-size:0.85rem;">🎤 Dictate</button>
+            <button class="action-btn" onclick="document.getElementById('smart-input').value='';document.getElementById('smart-status').innerHTML='';" type="button">Clear</button>
+        </div>
+        <div id="smart-status" style="font-size:0.8rem;color:var(--gray-400);margin-top:0.6rem;"></div>
+    </div>
+
+    <!-- QUICK ADD BY URL -->
+    <div class="add-section">
+        <h3>Or — Scan a Website by URL</h3>
         <div style="display:flex;gap:0.75rem;align-items:center;">
             <input type="text" id="quick-url" placeholder="Paste a website URL (e.g. www.smithracing.co.uk)" style="flex:1;padding:0.7rem 1rem;border:1px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:0.9rem;outline:none;">
-            <button class="add-btn" onclick="quickAdd()" id="quick-btn">Scan & Add</button>
+            <button class="add-btn" onclick="quickAdd()" id="quick-btn">Scan &amp; Add</button>
         </div>
         <div id="quick-status" style="font-size:0.8rem;color:var(--gray-400);margin-top:0.5rem;"></div>
     </div>
@@ -198,9 +247,11 @@
         <div class="filters">
             <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
             <button class="filter-btn" data-filter="New" onclick="setFilter('New', this)">New</button>
+            <button class="filter-btn" data-filter="Interested" onclick="setFilter('Interested', this)">Interested</button>
+            <button class="filter-btn" data-filter="Email Me" onclick="setFilter('Email Me', this)">Email Me</button>
+            <button class="filter-btn" data-filter="No Answer" onclick="setFilter('No Answer', this)">No Answer</button>
             <button class="filter-btn" data-filter="Called" onclick="setFilter('Called', this)">Called</button>
             <button class="filter-btn" data-filter="Callback" onclick="setFilter('Callback', this)">Callback</button>
-            <button class="filter-btn" data-filter="Interested" onclick="setFilter('Interested', this)">Interested</button>
             <button class="filter-btn" data-filter="Visit Booked" onclick="setFilter('Visit Booked', this)">Visit Booked</button>
             <button class="filter-btn" data-filter="Trial" onclick="setFilter('Trial', this)">Trial</button>
             <button class="filter-btn" data-filter="Paying" onclick="setFilter('Paying', this)">Paying</button>
@@ -259,9 +310,11 @@
             <input type="number" id="edit-horses" placeholder="Horses" min="0">
             <select id="edit-status">
                 <option value="New">New</option>
+                <option value="Interested">Interested</option>
+                <option value="Email Me">Email Me</option>
+                <option value="No Answer">No Answer</option>
                 <option value="Called">Called</option>
                 <option value="Callback">Callback</option>
-                <option value="Interested">Interested</option>
                 <option value="Visit Booked">Visit Booked</option>
                 <option value="Trial">Trial</option>
                 <option value="Paying">Paying</option>
@@ -280,6 +333,176 @@
 <script>
 let leads = JSON.parse(localStorage.getItem('gaitguard-leads') || '[]');
 let currentFilter = 'all';
+
+// ============== SMART TEXT PARSER ==============
+// Handles Google listings, website paste, free-form voice/text — extracts
+// yard, category, phone, email, location, notes, horses.
+function parseLeadText(raw) {
+    const text = (raw || '').trim();
+    if (!text) return null;
+
+    // Split into clean lines for line-aware matching
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+    // PHONE — UK formats
+    const phoneRegex = /(?:\+44\s?\d[\d\s]{8,12}\d)|(?:\b0\d{2,4}[\s\-]?\d{3,4}[\s\-]?\d{3,4}\b)|(?:\b07\d{3}[\s\-]?\d{6}\b)/;
+    const phoneMatch = text.match(phoneRegex);
+    const phone = phoneMatch ? phoneMatch[0].replace(/\s+/g, ' ').trim() : '';
+
+    // EMAIL
+    const emailMatch = text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+    const email = emailMatch ? emailMatch[0] : '';
+
+    // POSTCODE (UK)
+    const pcMatch = text.match(/\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i);
+    const postcode = pcMatch ? pcMatch[0].toUpperCase() : '';
+
+    // CATEGORY — keyword classifier
+    const t = text.toLowerCase();
+    let category = '';
+    if (/\b(racing|gallop|national hunt|flat racing|racehorse|training yard|racing trainer)\b/.test(t)) category = 'Racing Trainer';
+    else if (/\b(stud farm|stud|stallion|breeding|broodmare|foal|sire|covering)\b/.test(t)) category = 'Stud Farm';
+    else if (/\b(polo|chukka|chukker)\b/.test(t)) category = 'Polo Club';
+    else if (/\b(livery|liveries|boarding stable|horse boarding|diy livery|full livery|part livery)\b/.test(t)) category = 'Livery Yard';
+    else if (/\b(showjump|dressage|eventing|competition yard|sport horse|event yard)\b/.test(t)) category = 'Competition Yard';
+    else if (/\b(equestrian centre|equestrian center|riding school|riding centre|riding lesson|pony club)\b/.test(t)) category = 'Equestrian Centre';
+    else if (/\b(veterinary|vet practice|equine vet|equine hospital|equine clinic)\b/.test(t)) category = 'Equine Vet';
+    else if (/\b(rehabilitation|rehab|recovery|physiotherapy|hydrotherapy)\b/.test(t)) category = 'Rehab Centre';
+    else if (/\b(equine|horse|equestrian|pony|mare|gelding|stable|yard)\b/.test(t)) category = 'Other';
+
+    // YARD NAME — first line that isn't a rating/phone/hours/quote
+    let yard = '';
+    for (const line of lines) {
+        if (/^\d+(\.\d+)?\s*(\(\d+\))?[\s·*]/.test(line)) continue;       // "5.0(23) · ..."
+        if (/^(open|closed|closes|opens)\b/i.test(line)) continue;        // hours
+        if (/^["'""]/.test(line)) continue;                                 // review quote
+        if (phoneRegex.test(line) && line.replace(phoneRegex, '').trim().length < 4) continue;
+        if (/^(directions|website|call|share|save|nearby)$/i.test(line)) continue;
+        yard = line.replace(/^[•·\-]+\s*/, '').replace(/\s*·.*$/, '').trim();
+        break;
+    }
+    // Free-form input (one line, voice/dictation): clean trailing context off the yard name
+    const isFreeForm = lines.length === 1;
+    if (isFreeForm && yard) {
+        yard = yard
+            .replace(/\s+(?:in|at|near)\s+[A-Z][a-z]+(?:[\s\-][A-Z][a-z]+)*.*$/i, '')  // "Smith Racing in Newmarket..." -> "Smith Racing"
+            .replace(/,.*$/, '')                                                         // strip trailing comma clauses
+            .replace(/\s+phone\s*[\d\s\-+]+$/i, '')                                      // "... phone 07..."
+            .replace(phoneRegex, '')                                                     // strip embedded phone
+            .replace(/\s+\d{2,3}\s*(?:horses?|stables?|boxes?)\b.*$/i, '')              // "... 30 horses"
+            .replace(/\s+(?:racing trainer|stud farm|livery yard|equestrian centre|polo club|equine vet|rehab centre|competition yard)\s*$/i, '')
+            .trim();
+    }
+    if (!yard && lines[0]) {
+        yard = lines[0].split(/[,·]/)[0].trim();
+    }
+
+    // LOCATION — postcode wins; otherwise look for "Town · phone" or "in Town"
+    let location = postcode;
+    if (!location) {
+        for (const line of lines) {
+            const m = line.match(/^([A-Z][a-z]+(?:[\s\-][A-Z][a-z]+)*)\s*[·,]\s*(?:0\d|07)/);
+            if (m) { location = m[1]; break; }
+        }
+    }
+    if (!location) {
+        const m = text.match(/\b(?:in|at|near)\s+([A-Z][a-z]+(?:[\s\-][A-Z][a-z]+)*)/);
+        if (m) location = m[1];
+    }
+
+    // NOTES — pull review quote(s) (any quote style), dedupe
+    const allQuotes = [...new Set(
+        [...text.matchAll(/["""']([^"""']+)["""']/g)].map(m => m[1].trim()).filter(q => q.length > 2)
+    )];
+    let notes = allQuotes.length ? allQuotes.join(' / ') : '';
+    // Rating
+    const ratingMatch = text.match(/\b(\d\.\d)\s*\((\d+)\)/);
+    if (ratingMatch) notes = `★ ${ratingMatch[1]} (${ratingMatch[2]} reviews)${notes ? ' — ' + notes : ''}`;
+
+    // HORSES
+    let horses = '';
+    const hMatch = text.match(/(\d{2,3})\s*(?:horse|box|stable|stall)/i);
+    if (hMatch) horses = hMatch[1];
+
+    return { yard, category, phone, email, location, notes, horses };
+}
+
+function smartAdd() {
+    const raw = document.getElementById('smart-input').value;
+    const status = document.getElementById('smart-status');
+    const parsed = parseLeadText(raw);
+    if (!parsed || !parsed.yard) {
+        status.innerHTML = `<span style="color:var(--red);">Couldn't find a yard name. Add at least the business name.</span>`;
+        return;
+    }
+
+    // Check for likely duplicate (same yard name)
+    const dupe = leads.find(l => l.yard.toLowerCase() === parsed.yard.toLowerCase());
+    if (dupe) {
+        if (!confirm(`"${parsed.yard}" already exists. Add anyway?`)) return;
+    }
+
+    const lead = {
+        id: Date.now(),
+        name: '',
+        yard: parsed.yard,
+        category: parsed.category || '',
+        phone: parsed.phone,
+        email: parsed.email,
+        location: parsed.location,
+        horses: parsed.horses,
+        website: '',
+        notes: parsed.notes,
+        status: 'New',
+        followUp: '',
+        lastContact: '',
+        created: todayStr()
+    };
+    leads.unshift(lead);
+    save(`Added — ${lead.yard}`);
+
+    const found = [];
+    if (parsed.yard) found.push('yard');
+    if (parsed.category) found.push('category');
+    if (parsed.phone) found.push('phone');
+    if (parsed.email) found.push('email');
+    if (parsed.location) found.push('location');
+    if (parsed.notes) found.push('notes');
+    if (parsed.horses) found.push('horse count');
+
+    status.innerHTML = `<span style="color:var(--green);">Added "${parsed.yard}"</span> — found: ${found.join(', ') || 'name only'}. <span style="color:var(--gray-400);">Open Edit if anything looks wrong.</span>`;
+    document.getElementById('smart-input').value = '';
+}
+
+function smartVoice() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { showToast('Voice not supported — use Chrome or Safari', true); return; }
+    const ta = document.getElementById('smart-input');
+    const btn = document.getElementById('smart-mic');
+
+    if (activeRecognition) { activeRecognition.stop(); activeRecognition = null; return; }
+
+    const rec = new SR();
+    rec.lang = 'en-GB';
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+
+    rec.onstart = () => { btn.classList.add('recording'); showToast('Listening… speak then pause'); };
+    rec.onerror = (e) => { btn.classList.remove('recording'); showToast('Voice error: ' + e.error, true); activeRecognition = null; };
+    rec.onend   = () => { btn.classList.remove('recording'); activeRecognition = null; };
+    rec.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        if (!transcript) return;
+        ta.value = ta.value ? ta.value + '\n' + transcript : transcript;
+        document.getElementById('smart-status').innerHTML =
+            `<span style="color:var(--gray-500);">Heard: "${transcript}". Click Parse &amp; Add when ready.</span>`;
+    };
+
+    activeRecognition = rec;
+    try { rec.start(); }
+    catch (e) { showToast('Could not start mic: ' + e.message, true); activeRecognition = null; }
+}
 
 async function quickAdd() {
     let url = document.getElementById('quick-url').value.trim();
@@ -381,7 +604,7 @@ async function quickAdd() {
         };
 
         leads.unshift(lead);
-        save();
+        save(`Added — ${lead.yard}`);
 
         // Report what was found
         const found = [];
@@ -415,7 +638,7 @@ async function quickAdd() {
             created: new Date().toISOString().split('T')[0]
         };
         leads.unshift(lead);
-        save();
+        save(`Added — ${lead.yard} (URL only)`);
         status.innerHTML = `<span style="color:var(--amber);">Added with URL only</span> — couldn't scan the site. Click Edit to fill in details.`;
         document.getElementById('quick-url').value = '';
     }
@@ -424,10 +647,114 @@ async function quickAdd() {
     btn.textContent = 'Scan & Add';
 }
 
-function save() {
-    localStorage.setItem('gaitguard-leads', JSON.stringify(leads));
-    updateStats();
-    renderTable();
+function save(toastMsg) {
+    try {
+        localStorage.setItem('gaitguard-leads', JSON.stringify(leads));
+        updateStats();
+        renderTable();
+        if (toastMsg) showToast(toastMsg);
+    } catch (err) {
+        showToast('SAVE FAILED — ' + err.message, true);
+        console.error('save failed:', err);
+    }
+}
+
+function showToast(msg, isError) {
+    let t = document.getElementById('toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'toast';
+        t.className = 'toast';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.toggle('error', !!isError);
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+function markStatus(id, status) {
+    const lead = leads.find(l => l.id === id);
+    if (!lead) return;
+    const today = todayStr();
+    lead.status = status;
+    lead.lastContact = today;
+    if (status === 'No Answer') {
+        const next = new Date(); next.setDate(next.getDate() + 2);
+        lead.followUp = next.toISOString().split('T')[0];
+        lead.notes = appendNote(lead.notes, today, 'No answer — try again');
+    } else if (status === 'Email Me') {
+        const next = new Date(); next.setDate(next.getDate() + 1);
+        lead.followUp = next.toISOString().split('T')[0];
+        lead.notes = appendNote(lead.notes, today, 'Wants email follow-up');
+    } else if (status === 'Interested') {
+        lead.notes = appendNote(lead.notes, today, 'Interested');
+    } else if (status === 'Rejected') {
+        lead.followUp = '';
+        lead.notes = appendNote(lead.notes, today, 'Rejected');
+    }
+    save(`Saved — ${lead.name || lead.yard || 'lead'} marked ${status}`);
+}
+
+function appendNote(existing, date, msg) {
+    const stamp = `[${date}] ${msg}`;
+    return existing ? `${stamp}\n${existing}` : stamp;
+}
+
+let activeRecognition = null;
+function voiceNote(id) {
+    const lead = leads.find(l => l.id === id);
+    if (!lead) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+        showToast('Voice not supported — use Chrome or Safari', true);
+        return;
+    }
+    const micBtn = document.getElementById(`mic-${id}`);
+
+    if (activeRecognition) {
+        activeRecognition.stop();
+        activeRecognition = null;
+        return;
+    }
+
+    const rec = new SR();
+    rec.lang = 'en-GB';
+    rec.interimResults = false;
+    rec.continuous = false;
+    rec.maxAlternatives = 1;
+
+    rec.onstart = () => {
+        if (micBtn) micBtn.classList.add('recording');
+        showToast('Listening… speak then pause');
+    };
+    rec.onerror = (e) => {
+        if (micBtn) micBtn.classList.remove('recording');
+        showToast('Voice error: ' + e.error, true);
+        activeRecognition = null;
+    };
+    rec.onend = () => {
+        if (micBtn) micBtn.classList.remove('recording');
+        activeRecognition = null;
+    };
+    rec.onresult = (event) => {
+        const transcript = event.results[0][0].transcript.trim();
+        if (!transcript) return;
+        const today = todayStr();
+        lead.notes = appendNote(lead.notes, today, transcript);
+        lead.lastContact = today;
+        save(`Saved — "${transcript.slice(0, 40)}${transcript.length > 40 ? '…' : ''}"`);
+    };
+
+    activeRecognition = rec;
+    try { rec.start(); }
+    catch (e) {
+        showToast('Could not start mic: ' + e.message, true);
+        activeRecognition = null;
+    }
 }
 
 function addLead() {
@@ -447,36 +774,19 @@ function addLead() {
         lastContact: '',
         created: new Date().toISOString().split('T')[0]
     };
-    if (!lead.name && !lead.yard) return alert('Enter a name or yard name');
+    if (!lead.name && !lead.yard) return showToast('Enter a name or yard name', true);
     leads.unshift(lead);
-    save();
+    save(`Added — ${lead.name || lead.yard}`);
     // Clear form
     ['add-name','add-yard','add-phone','add-email','add-location','add-horses','add-website','add-notes'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('add-category').selectedIndex = 0;
 }
 
 function deleteLead(id) {
-    if (!confirm('Delete this lead?')) return;
+    const lead = leads.find(l => l.id === id);
+    if (!confirm(`Delete ${lead?.name || lead?.yard || 'this lead'}?`)) return;
     leads = leads.filter(l => l.id !== id);
-    save();
-}
-
-function markCalled(id) {
-    const lead = leads.find(l => l.id === id);
-    if (lead) {
-        lead.status = lead.status === 'New' ? 'Called' : lead.status;
-        lead.lastContact = new Date().toISOString().split('T')[0];
-    }
-    save();
-}
-
-function quickStatus(id, status) {
-    const lead = leads.find(l => l.id === id);
-    if (lead) {
-        lead.status = status;
-        lead.lastContact = new Date().toISOString().split('T')[0];
-    }
-    save();
+    save('Deleted');
 }
 
 function openEdit(id) {
@@ -513,7 +823,7 @@ function saveEdit() {
     lead.followUp = document.getElementById('edit-followup').value;
     lead.notes = document.getElementById('edit-notes').value.trim();
     closeModal();
-    save();
+    save(`Saved — ${lead.name || lead.yard || 'lead'}`);
 }
 
 function setFilter(filter, btn) {
@@ -561,10 +871,15 @@ function renderTable() {
             <td style="font-size:0.8rem;color:var(--gray-500);">${formatDate(l.lastContact)}</td>
             <td><div class="note-text">${l.notes || ''}</div></td>
             <td>
-                <div class="actions">
-                    <button class="action-btn" onclick="openEdit(${l.id})" title="Edit">Edit</button>
-                    <button class="action-btn" onclick="markCalled(${l.id})" title="Mark Called">Called</button>
-                    <button class="action-btn" onclick="quickStatus(${l.id},'Interested')" title="Mark Interested">Int.</button>
+                <div class="quick-row">
+                    <button class="quick-btn qb-interested" onclick="markStatus(${l.id},'Interested')" title="Super interested">Interested</button>
+                    <button class="quick-btn qb-email" onclick="markStatus(${l.id},'Email Me')" title="Wants email">Email Me</button>
+                    <button class="quick-btn qb-no-answer" onclick="markStatus(${l.id},'No Answer')" title="Didn't answer">No Answer</button>
+                    <button class="quick-btn qb-rejected" onclick="markStatus(${l.id},'Rejected')" title="Rejected">Rejected</button>
+                    <button class="quick-btn qb-mic" id="mic-${l.id}" onclick="voiceNote(${l.id})" title="Voice note">🎤</button>
+                </div>
+                <div style="display:flex;gap:0.35rem;margin-top:0.35rem;">
+                    <button class="action-btn" onclick="openEdit(${l.id})" title="Edit lead">Edit</button>
                     <button class="action-btn delete" onclick="deleteLead(${l.id})" title="Delete">X</button>
                 </div>
             </td>
@@ -574,11 +889,11 @@ function renderTable() {
 
 function updateStats() {
     document.getElementById('stat-total').textContent = leads.length;
-    document.getElementById('stat-called').textContent = leads.filter(l => l.status !== 'New').length;
-    document.getElementById('stat-interested').textContent = leads.filter(l => l.status === 'Interested' || l.status === 'Callback').length;
+    document.getElementById('stat-interested').textContent = leads.filter(l => l.status === 'Interested').length;
+    document.getElementById('stat-email').textContent = leads.filter(l => l.status === 'Email Me').length;
+    document.getElementById('stat-no-answer').textContent = leads.filter(l => l.status === 'No Answer').length;
+    document.getElementById('stat-rejected').textContent = leads.filter(l => l.status === 'Rejected').length;
     document.getElementById('stat-visits').textContent = leads.filter(l => l.status === 'Visit Booked').length;
-    document.getElementById('stat-trials').textContent = leads.filter(l => l.status === 'Trial').length;
-    document.getElementById('stat-paying').textContent = leads.filter(l => l.status === 'Paying').length;
 }
 
 function exportCSV() {
