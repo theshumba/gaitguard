@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>GaitGuard — debug state</title>
+<meta http-equiv="Cache-Control" content="no-cache">
+<style>
+body{font-family:Menlo,monospace;background:#000;color:#0f0;padding:20px;line-height:1.6}
+.row{padding:6px 0;border-bottom:1px solid #030}
+.err{color:#f33}
+.ok{color:#0f0}
+.warn{color:#fc0}
+pre{background:#001a00;padding:10px;font-size:12px;overflow:auto;max-height:400px}
+</style>
+</head><body>
+<h1>GaitGuard CRM — state diagnostic</h1>
+<div id="out"></div>
+<script>
+const out = document.getElementById('out');
+function log(label, value, cls='ok') {
+  const div = document.createElement('div');
+  div.className = 'row ' + cls;
+  div.innerHTML = '<strong>' + label + ':</strong> ' + value;
+  out.appendChild(div);
+}
+
+// 1. Check origin
+log('Origin', location.origin);
+log('User agent', navigator.userAgent.slice(0,80));
+
+// 2. localStorage availability
+try {
+  localStorage.setItem('__test__', '1');
+  localStorage.removeItem('__test__');
+  log('localStorage', 'available');
+} catch (e) {
+  log('localStorage', 'BLOCKED: ' + e.message, 'err');
+}
+
+// 3. Inspect every gaitguard-* key
+const keys = Object.keys(localStorage).filter(k => k.startsWith('gaitguard') || k.startsWith('crescendo'));
+log('Found GaitGuard keys', keys.length + ': ' + keys.join(', '));
+
+// 4. Decode the leads payload
+const raw = localStorage.getItem('gaitguard-leads-v2');
+if (!raw) {
+  log('gaitguard-leads-v2', 'EMPTY / NOT SET', 'err');
+} else {
+  log('gaitguard-leads-v2 size', raw.length.toLocaleString() + ' chars');
+  try {
+    const leads = JSON.parse(raw);
+    log('Parsed leads', Array.isArray(leads) ? leads.length : 'NOT AN ARRAY: ' + typeof leads, Array.isArray(leads) ? 'ok' : 'err');
+    if (Array.isArray(leads)) {
+      const byStatus = {};
+      leads.forEach(l => { byStatus[l.status] = (byStatus[l.status] || 0) + 1; });
+      log('Status breakdown', JSON.stringify(byStatus));
+      log('First lead businessName', leads[0]?.businessName);
+      log('First lead status', leads[0]?.status);
+      log('First lead has crm field', leads[0]?.crm ? 'yes' : 'no');
+      log('First lead full structure (truncated)', '<pre>' + JSON.stringify(leads[0], null, 2).slice(0, 800) + '</pre>');
+
+      // Now run the EXACT same filter the CRM uses for the badge
+      const leadBankCount = leads.filter(l => l.status !== 'archive').length;
+      const qualCount = leads.filter(l => l.status === 'qualified' || l.status === 'crm').length;
+      const crmCount = leads.filter(l => l.status === 'crm').length;
+      log('--- CRM badge filters applied to this data ---', '');
+      log('Lead Bank badge would show', leadBankCount);
+      log('Qualified Leads badge would show', qualCount);
+      log('CRM badge would show', crmCount);
+    }
+  } catch (e) {
+    log('JSON parse', 'FAILED: ' + e.message, 'err');
+    log('First 200 chars', '<pre>' + raw.slice(0, 200).replace(/</g, '&lt;') + '</pre>');
+  }
+}
+
+// 5. Simulate the CRM's loadState
+log('--- simulating CRM loadState ---', '');
+const fakeState = { leads: [] };
+try {
+  const saved = localStorage.getItem('gaitguard-leads-v2');
+  if (saved !== null && saved !== undefined && saved !== '') {
+    const parsed = JSON.parse(saved);
+    if (Array.isArray(parsed)) {
+      fakeState.leads = parsed;
+      log('loadState would return TRUE', 'state.leads.length = ' + fakeState.leads.length);
+    } else {
+      log('loadState would return FALSE', 'parsed is not an array', 'err');
+    }
+  } else {
+    log('loadState would return FALSE', 'localStorage is empty', 'err');
+  }
+} catch (e) {
+  log('loadState would return FALSE (caught error)', e.message, 'err');
+}
+</script>
+</body></html>
