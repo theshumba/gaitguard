@@ -984,8 +984,8 @@ const GaitGuardSync = (function () {
   function isConfigured() {
     const c = window.GAITGUARD_FIREBASE_CONFIG;
     if (!c) return false;
-    return c.apiKey && !String(c.apiKey).startsWith('PASTE') &&
-           c.projectId && !String(c.projectId).startsWith('PASTE');
+    const isPlaceholder = v => !v || /^(PASTE|YOUR_|<)/i.test(String(v));
+    return !isPlaceholder(c.apiKey) && !isPlaceholder(c.projectId);
   }
 
   async function init() {
@@ -5466,26 +5466,39 @@ document.getElementById('chat-test-key').addEventListener('click', testGeminiCon
 
 // ========== INIT ==========
 function init() {
-  // Check if user is already logged in
-  if (isLoggedIn()) {
-    const user = getCurrentUser();
-    document.getElementById('current-user-display').textContent = user;
-    hideLoginOverlay();
+  console.info('[GaitGuard] init() — state.leads has', state.leads?.length ?? 'undefined', 'entries on entry');
+  try {
+    // Check if user is already logged in
+    if (isLoggedIn()) {
+      const user = getCurrentUser();
+      const disp = document.getElementById('current-user-display');
+      if (disp) disp.textContent = user;
+      hideLoginOverlay();
+    }
+    updateMasterUI();
+    renderResetButton();
+    renderExportButton();
+    renderImportButton();
+    applyConsultantDefaults();
+    try { loadChatState(); } catch (e) { console.warn('loadChatState failed:', e); }
+    // Ensure home is the default section on first login unless user has a saved pref
+    if (!state.activeSection) state.activeSection = 'home';
+    // Reflect persisted activeSection into UI
+    try { showSection(state.activeSection); } catch (e) {
+      console.error('showSection failed, falling back to badge render only:', e);
+      try { renderSidebarBadges(); } catch (_) {}
+    }
+    try { lucide.createIcons(); } catch (e) { console.warn('lucide.createIcons failed (CDN may be down):', e); }
+    // Boot shared-backend sync (safe no-op if Firebase isn't configured).
+    try { startSharedSync(); } catch (e) { console.warn('startSharedSync failed:', e); }
+  } catch (e) {
+    console.error('[GaitGuard] init() crashed:', e);
+    // Best-effort: still try to render badges so user sees their data
+    try { renderSidebarBadges(); } catch (_) {}
   }
-  updateMasterUI();
-  renderResetButton();
-  renderExportButton();
-  renderImportButton();
-  applyConsultantDefaults();
-  loadChatState();
-  // Ensure home is the default section on first login unless user has a saved pref
-  if (!state.activeSection) state.activeSection = 'home';
-  // Reflect persisted activeSection into UI
-  showSection(state.activeSection);
-  lucide.createIcons();
-  // Boot shared-backend sync (safe no-op if Firebase isn't configured).
-  startSharedSync();
 }
+window.addEventListener('error', e => console.error('[GaitGuard window error]', e.message, 'at', e.filename + ':' + e.lineno));
+window.addEventListener('unhandledrejection', e => console.error('[GaitGuard unhandled rejection]', e.reason));
 
 // Initialize Firestore sync + merge remote leads into local state, live.
 async function startSharedSync() {
@@ -5496,9 +5509,13 @@ async function startSharedSync() {
       return;
     }
     GaitGuardSync.subscribe(remoteLeads => {
-      // Remote snapshot wins; this makes the Master view reflect everyone's work live.
+      // Defensive: don't let an empty/error snapshot wipe local data
+      if (!Array.isArray(remoteLeads)) return;
+      if (remoteLeads.length === 0 && Array.isArray(state.leads) && state.leads.length > 0) {
+        console.warn('[GaitGuardSync] Ignoring empty remote snapshot — keeping local', state.leads.length, 'leads.');
+        return;
+      }
       state.leads = remoteLeads;
-      // Persist locally too so offline reloads keep the latest data.
       try { localStorage.setItem('gaitguard-leads-v2', JSON.stringify(state.leads)); } catch (_) {}
       if (typeof renderAll === 'function') renderAll();
     });
