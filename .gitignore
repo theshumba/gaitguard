@@ -7,3 +7,6 @@ hero-video.mp4
 __pycache__/
 .DS_Store
 yolov8n.pt
+
+# Local-only lead data (private contact info)
+_local/
