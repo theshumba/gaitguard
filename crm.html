@@ -791,6 +791,11 @@ ul, ol { list-style: none; }
         <i data-lucide="bar-chart-3" aria-hidden="true"></i>
         Reports
       </button>
+      <button class="nav-item" data-section="all-data">
+        <i data-lucide="table" aria-hidden="true"></i>
+        All Data
+        <span class="nav-badge nav-badge-teal" id="badge-all-data" aria-live="polite">0</span>
+      </button>
       <button class="nav-item" data-section="activity-monitor" id="nav-activity-monitor" style="display:none;">
         <i data-lucide="activity" aria-hidden="true"></i>
         Activity Monitor
@@ -876,6 +881,11 @@ ul, ol { list-style: none; }
         <div id="reports-content"></div>
       </section>
 
+      <!-- All Data (mega table) -->
+      <section id="section-all-data" aria-label="All Data">
+        <div id="all-data-content"></div>
+      </section>
+
       <!-- Activity Monitor (Master only) -->
       <section id="section-activity-monitor" aria-label="Activity Monitor">
         <div id="activity-monitor-content"></div>
@@ -954,8 +964,10 @@ const state = {
   filters: {
     leadBank: { search: '', status: 'all', source: 'all', assignedTo: 'all', today: false },
     crm: { search: '', stage: 'all', priority: 'all', overdueOnly: false, assignedTo: 'all', today: false },
-    archive: {}
+    archive: {},
+    allData: { search: '', status: 'all' }
   },
+  allDataSort: { col: 'businessName', dir: 'asc' },
   panelOpen: false,
   modalOpen: false,
   panelTrigger: null,
@@ -1497,6 +1509,13 @@ function moveToCRM(id) {
   addActivity(lead, 'moved to CRM');
   saveState();
 }
+function moveBackToQualified(id) {
+  const lead = getLeadById(id);
+  if (!lead) return;
+  lead.status = 'qualified';
+  addActivity(lead, 'moved back to Qualified');
+  saveState();
+}
 function updateCRM(id, changes) {
   const lead = getLeadById(id);
   if (lead && lead.crm) { Object.assign(lead.crm, changes); saveState(); }
@@ -1705,6 +1724,7 @@ function renderActiveSection() {
     case 'archive': renderArchive(); break;
     case 'playbooks': renderPlaybooks(); break;
     case 'reports': renderReports(); break;
+    case 'all-data': renderAllData(); break;
     case 'activity-monitor': renderActivityMonitor(); break;
   }
   renderSidebarBadges();
@@ -1717,7 +1737,7 @@ function renderAll() {
 // ========== SIDEBAR BADGES ==========
 function renderSidebarBadges() {
   const leadBankCount = state.leads.filter(l => l.status !== 'archive').length;
-  const qualCount = state.leads.filter(l => l.status === 'qualified' || l.status === 'crm').length;
+  const qualCount = state.leads.filter(l => l.status === 'qualified').length;
   const crmCount = state.leads.filter(l => l.status === 'crm').length;
   const meetCount = state.leads.filter(l => l.status === 'crm' && l.crm && l.crm.meetingBooked).length;
   const archCount = state.leads.filter(l => l.status === 'archive').length;
@@ -1737,6 +1757,8 @@ function renderSidebarBadges() {
   }
   document.getElementById('badge-meetings').textContent = meetCount;
   document.getElementById('badge-archive').textContent = archCount;
+  const allDataBadge = document.getElementById('badge-all-data');
+  if (allDataBadge) allDataBadge.textContent = state.leads.length;
 }
 
 // ========== PANEL & MODAL ==========
@@ -2318,7 +2340,7 @@ function renderQualificationModal(lead) {
 // ========== RENDER: QUALIFIED LEADS ==========
 function renderQualifiedLeads() {
   const container = document.getElementById('qualified-leads-content');
-  const qualified = state.leads.filter(l => l.status === 'qualified' || l.status === 'crm');
+  const qualified = state.leads.filter(l => l.status === 'qualified');
   const unqualified = state.leads.filter(l => l.status === 'unqualified');
   const hasUnqual = unqualified.length > 0;
 
@@ -2351,6 +2373,10 @@ function renderQualifiedLeads() {
       const q = l.qualification || {};
       const score = getQualificationScore(l);
       const sb = STATUS_BADGES[l.status];
+      const pc = getPrimaryContact(l);
+      const allPhones = [...(l.phones || []).map(p => p.number)];
+      (l.contacts || []).forEach(c => { if (c.phone && !allPhones.includes(c.phone)) allPhones.push(c.phone); });
+      const websiteHref = l.website ? (l.website.startsWith('http') ? l.website : 'https://' + l.website) : '';
       html += `
         <div class="card lead-card">
           <div class="lead-card-header">
@@ -2362,6 +2388,13 @@ function renderQualifiedLeads() {
               ${renderScoreBadge(l)}
               <span class="badge ${sb.cls}">${sb.label}</span>
             </div>
+          </div>
+          <div class="qual-contact-block" style="display:flex;flex-direction:column;gap:4px;padding:var(--space-2) var(--space-3);background:var(--color-surface-offset);border-radius:var(--radius-md);margin:var(--space-2) 0;font-size:var(--text-sm);">
+            ${pc ? `<div><strong>${escapeHtml(pc.name)}</strong>${pc.title ? ' <span style="color:var(--color-text-muted);">— ' + escapeHtml(pc.title) + '</span>' : ''}</div>` : '<div style="color:var(--color-text-faint);font-style:italic;">No point of contact yet</div>'}
+            ${allPhones.length ? `<div style="display:flex;flex-wrap:wrap;gap:var(--space-2);">${allPhones.map(num => `<a href="tel:${escapeHtml(num.replace(/\s+/g,''))}" style="color:var(--color-primary);text-decoration:none;" onclick="event.stopPropagation()">📞 ${escapeHtml(num)}</a>`).join('')}</div>` : ''}
+            ${pc && pc.email ? `<div><a href="mailto:${escapeHtml(pc.email)}" style="color:var(--color-primary);text-decoration:none;word-break:break-all;" onclick="event.stopPropagation()">✉️ ${escapeHtml(pc.email)}</a></div>` : ''}
+            ${l.website ? `<div><a href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener" style="color:var(--color-primary);text-decoration:none;word-break:break-all;" onclick="event.stopPropagation()">🌐 ${escapeHtml(l.website)}</a></div>` : ''}
+            ${l.county ? `<div style="color:var(--color-text-muted);font-size:var(--text-xs);">📍 ${escapeHtml(l.county)}</div>` : ''}
           </div>
           <div class="service-tags">
             <span class="service-tag ${q.yardOperation?.trim() ? 'filled' : 'empty'}">Yard & Operation ${q.yardOperation?.trim() ? '&#10003;' : ''}</span>
@@ -2541,7 +2574,17 @@ function renderCRMList(leads) {
             <div class="lead-name">${escapeHtml(l.businessName)}</div>${renderScoreBadge(l)}
           </div>
           ${l.industry ? `<span class="badge badge-neutral" style="align-self:flex-start;">${escapeHtml(l.industry)}</span>` : ''}
-          ${pc ? `<div class="contact-info">${escapeHtml(pc.name)}${pc.title ? ' - ' + escapeHtml(pc.title) : ''}</div>` : ''}
+          ${(() => {
+            const allPhones = [...((l.phones || []).map(p => p.number))];
+            (l.contacts || []).forEach(c => { if (c.phone && !allPhones.includes(c.phone)) allPhones.push(c.phone); });
+            const websiteHref = l.website ? (l.website.startsWith('http') ? l.website : 'https://' + l.website) : '';
+            return `<div class="qual-contact-block" style="display:flex;flex-direction:column;gap:3px;padding:var(--space-2);background:var(--color-surface-offset);border-radius:var(--radius-md);font-size:var(--text-sm);">
+              ${pc ? `<div><strong>${escapeHtml(pc.name)}</strong>${pc.title ? ' <span style="color:var(--color-text-muted);">— ' + escapeHtml(pc.title) + '</span>' : ''}</div>` : '<div style="color:var(--color-text-faint);font-style:italic;font-size:var(--text-xs);">No point of contact</div>'}
+              ${allPhones.length ? `<div style="display:flex;flex-wrap:wrap;gap:var(--space-2);">${allPhones.map(num => `<a href="tel:${escapeHtml(num.replace(/\s+/g,''))}" style="color:var(--color-primary);text-decoration:none;font-size:var(--text-xs);" onclick="event.stopPropagation()">📞 ${escapeHtml(num)}</a>`).join('')}</div>` : ''}
+              ${pc && pc.email ? `<div><a href="mailto:${escapeHtml(pc.email)}" style="color:var(--color-primary);text-decoration:none;word-break:break-all;font-size:var(--text-xs);" onclick="event.stopPropagation()">✉️ ${escapeHtml(pc.email)}</a></div>` : ''}
+              ${l.website ? `<div><a href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener" style="color:var(--color-primary);text-decoration:none;word-break:break-all;font-size:var(--text-xs);" onclick="event.stopPropagation()">🌐 ${escapeHtml(l.website)}</a></div>` : ''}
+            </div>`;
+          })()}
           ${canReassignLeads() ? `<select class="reassign-select" data-action="reassign-lead" data-id="${l.id}" aria-label="Reassign lead">${CONSULTANTS.map(c => `<option value="${c}"${l.assignedTo===c?' selected':''}>${c}</option>`).join('')}</select>` : (l.assignedTo ? `<div class="assigned-badge"><i data-lucide="user" aria-hidden="true"></i> Assigned: ${escapeHtml(l.assignedTo)}</div>` : '')}
           <div class="deal-value-wrap${dealProminent ? ' prominent' : ''}">
             <label class="form-label" style="margin-bottom:2px;display:block;">Deal value</label>
@@ -2638,6 +2681,7 @@ function renderCRMList(leads) {
         <div class="crm-actions">
           <button class="btn btn-ghost btn-sm btn-generate-email" data-action="generate-email" data-id="${l.id}"><i data-lucide="mail" aria-hidden="true"></i> Generate Email</button>
           ${showBrief ? `<button class="btn btn-secondary btn-sm" data-action="generate-brief" data-id="${l.id}"><i data-lucide="clipboard-list" aria-hidden="true"></i> Generate Brief</button>` : ''}
+          <button class="btn btn-ghost btn-sm" data-action="move-back-to-qualified" data-id="${l.id}" title="Move back to Qualified Leads (preserves stage, notes, and follow-ups)"><i data-lucide="arrow-left" aria-hidden="true"></i> Back to Qualified</button>
           <button class="btn btn-ghost btn-sm" data-action="archive-lead" data-id="${l.id}" data-disposition="archived"><i data-lucide="archive" aria-hidden="true"></i> Archive</button>
           <button class="btn btn-danger-ghost btn-sm" data-action="archive-lead" data-id="${l.id}" data-disposition="not_interested"><i data-lucide="x-circle" aria-hidden="true"></i> Not Interested</button>
         </div>
@@ -3718,6 +3762,11 @@ document.getElementById('section-crm').addEventListener('click', e => {
     const lead = getLeadById(id);
     if (lead) openModal('email', lead);
     return;
+  } else if (action === 'move-back-to-qualified') {
+    moveBackToQualified(id);
+    showToast('Lead moved back to Qualified', 'success');
+    renderAll();
+    return;
   } else if (action === 'crm-view') {
     state.crmView = target.dataset.view;
     saveState();
@@ -4619,6 +4668,200 @@ function renderReports() {
 // Reports event delegation
 document.getElementById('section-reports').addEventListener('change', e => {
   if (e.target.id === 'report-range') { state.reportRange = e.target.value; renderReports(); }
+});
+
+// ========== ALL DATA (Mega Table) ==========
+const ALL_DATA_COLS = [
+  { key: 'businessName',     label: 'Business',         type: 'string', sticky: true },
+  { key: 'status',           label: 'Status',           type: 'string' },
+  { key: 'score',            label: 'Score',            type: 'number' },
+  { key: 'contactName',      label: 'Contact',          type: 'string' },
+  { key: 'contactRole',      label: 'Role',             type: 'string' },
+  { key: 'phone',            label: 'Phone',            type: 'string' },
+  { key: 'email',            label: 'Email',            type: 'string' },
+  { key: 'website',          label: 'Website',          type: 'string' },
+  { key: 'county',           label: 'County',           type: 'string' },
+  { key: 'yardType',         label: 'Yard type',        type: 'string' },
+  { key: 'industry',         label: 'Discipline',       type: 'string' },
+  { key: 'horseCount',       label: 'Horses',           type: 'number' },
+  { key: 'source',           label: 'Source',           type: 'string' },
+  { key: 'stage',            label: 'Stage',            type: 'number' },
+  { key: 'disposition',      label: 'Disposition',      type: 'string' },
+  { key: 'priority',         label: 'Priority',         type: 'string' },
+  { key: 'dateAdded',        label: 'Added',            type: 'date' },
+  { key: 'dateQualified',    label: 'Qualified',        type: 'date' },
+  { key: 'dateFirstContact', label: 'First contact',    type: 'date' },
+  { key: 'dateLastContact',  label: 'Last contact',     type: 'date' },
+  { key: 'followUpDate',     label: 'Follow-up',        type: 'date' },
+  { key: 'qualFilled',       label: 'Qual (n/5)',       type: 'number' },
+  { key: 'checklist',        label: 'Research (n/7)',   type: 'number' },
+  { key: 'notesCount',       label: 'Notes',            type: 'number' },
+  { key: 'activityCount',    label: 'Activity',         type: 'number' }
+];
+
+function buildAllDataRow(l) {
+  const pc = getPrimaryContact(l) || {};
+  const phone = (l.phones && l.phones[0] && l.phones[0].number) || pc.phone || '';
+  const email = pc.email || (l.emails && l.emails[0] && l.emails[0].address) || '';
+  const q = l.qualification || {};
+  const qualFilled = ['yardOperation','painPoint','budgetSignal','decisionMaker','pilotFit']
+    .filter(k => q[k] && q[k].trim()).length;
+  return {
+    id: l.id,
+    businessName:     l.businessName || '',
+    status:           l.status || '',
+    score:            getOpportunityScore(l),
+    contactName:      pc.name || '',
+    contactRole:      pc.title || '',
+    phone:            phone,
+    email:            email,
+    website:          l.website || '',
+    county:           l.county || '',
+    yardType:         l.yardType || '',
+    industry:         l.industry || '',
+    horseCount:       l.horseCount || 0,
+    source:           l.source || '',
+    stage:            l.crm ? l.crm.stage : '',
+    disposition:      l.crm ? l.crm.disposition : '',
+    priority:         l.crm ? l.crm.priority : '',
+    dateAdded:        l.dateAdded || '',
+    dateQualified:    (l.qualification && l.qualification.dateQualified) || '',
+    dateFirstContact: l.crm ? l.crm.dateFirstContact : '',
+    dateLastContact:  l.crm ? l.crm.dateLastContact : '',
+    followUpDate:     l.crm ? l.crm.followUpDate : '',
+    qualFilled:       qualFilled,
+    checklist:        (l.researchChecklist || []).length,
+    notesCount:       l.crm && l.crm.notes ? l.crm.notes.length : 0,
+    activityCount:    (l.activity || []).length
+  };
+}
+
+function renderAllData() {
+  const container = document.getElementById('all-data-content');
+  const f = state.filters.allData;
+  const sort = state.allDataSort;
+
+  let rows = state.leads.map(buildAllDataRow);
+
+  if (f.status !== 'all') rows = rows.filter(r => r.status === f.status);
+  if (f.search) {
+    const s = f.search.toLowerCase();
+    rows = rows.filter(r =>
+      r.businessName.toLowerCase().includes(s) ||
+      r.contactName.toLowerCase().includes(s) ||
+      r.county.toLowerCase().includes(s) ||
+      r.website.toLowerCase().includes(s) ||
+      r.email.toLowerCase().includes(s) ||
+      r.phone.toLowerCase().includes(s)
+    );
+  }
+
+  const col = ALL_DATA_COLS.find(c => c.key === sort.col) || ALL_DATA_COLS[0];
+  rows.sort((a, b) => {
+    let av = a[sort.col], bv = b[sort.col];
+    if (col.type === 'number') { av = +av || 0; bv = +bv || 0; return sort.dir === 'asc' ? av - bv : bv - av; }
+    if (col.type === 'date')   { av = av || ''; bv = bv || ''; return sort.dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av); }
+    av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase();
+    return sort.dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+
+  const arrow = (key) => sort.col === key ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '';
+
+  const headerHtml = ALL_DATA_COLS.map(c => `
+    <th data-action="all-data-sort" data-col="${c.key}"
+        style="cursor:pointer;padding:var(--space-2) var(--space-3);text-align:left;background:var(--color-surface-offset);border-bottom:2px solid var(--color-border);position:sticky;top:0;z-index:2;${c.sticky ? 'left:0;z-index:3;' : ''}white-space:nowrap;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:0.05em;">
+      ${c.label}${arrow(c.key)}
+    </th>
+  `).join('');
+
+  const cellStyle = 'padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--color-border-subtle, rgba(0,0,0,0.06));font-size:var(--text-sm);white-space:nowrap;';
+  const stickyCellStyle = cellStyle + 'position:sticky;left:0;background:var(--color-surface);z-index:1;font-weight:600;';
+
+  const bodyHtml = rows.map(r => {
+    const websiteHref = r.website ? (r.website.startsWith('http') ? r.website : 'https://' + r.website) : '';
+    return `<tr style="background:var(--color-surface);">
+      <td style="${stickyCellStyle}">${escapeHtml(r.businessName)}</td>
+      <td style="${cellStyle}"><span class="badge ${STATUS_BADGES[r.status]?.cls || 'badge-neutral'}">${STATUS_BADGES[r.status]?.label || r.status}</span></td>
+      <td style="${cellStyle}">${r.score}</td>
+      <td style="${cellStyle}">${escapeHtml(r.contactName)}</td>
+      <td style="${cellStyle}">${escapeHtml(r.contactRole)}</td>
+      <td style="${cellStyle}">${r.phone ? `<a href="tel:${escapeHtml(r.phone.replace(/\s+/g,''))}" style="color:var(--color-primary);text-decoration:none;">${escapeHtml(r.phone)}</a>` : ''}</td>
+      <td style="${cellStyle}">${r.email ? `<a href="mailto:${escapeHtml(r.email)}" style="color:var(--color-primary);text-decoration:none;">${escapeHtml(r.email)}</a>` : ''}</td>
+      <td style="${cellStyle};max-width:240px;overflow:hidden;text-overflow:ellipsis;">${r.website ? `<a href="${escapeHtml(websiteHref)}" target="_blank" rel="noopener" style="color:var(--color-primary);text-decoration:none;">${escapeHtml(r.website)}</a>` : ''}</td>
+      <td style="${cellStyle}">${escapeHtml(r.county)}</td>
+      <td style="${cellStyle}">${r.yardType ? escapeHtml(yardTypeLabel(r.yardType)) : ''}</td>
+      <td style="${cellStyle}">${r.industry ? escapeHtml(disciplineLabel(r.industry)) : ''}</td>
+      <td style="${cellStyle}">${r.horseCount || ''}</td>
+      <td style="${cellStyle}">${r.source ? escapeHtml(sourceLabel(r.source)) : ''}</td>
+      <td style="${cellStyle}">${r.stage ? escapeHtml(getStageName(r.stage)) : ''}</td>
+      <td style="${cellStyle}">${r.disposition ? escapeHtml(getDispositionLabel(r.disposition)) : ''}</td>
+      <td style="${cellStyle}">${escapeHtml(r.priority)}</td>
+      <td style="${cellStyle}">${r.dateAdded ? formatDate(r.dateAdded) : ''}</td>
+      <td style="${cellStyle}">${r.dateQualified ? formatDate(r.dateQualified) : ''}</td>
+      <td style="${cellStyle}">${r.dateFirstContact ? formatDate(r.dateFirstContact) : ''}</td>
+      <td style="${cellStyle}">${r.dateLastContact ? formatDate(r.dateLastContact) : ''}</td>
+      <td style="${cellStyle}">${r.followUpDate ? formatDate(r.followUpDate) : ''}</td>
+      <td style="${cellStyle}">${r.qualFilled}/5</td>
+      <td style="${cellStyle}">${r.checklist}/7</td>
+      <td style="${cellStyle}">${r.notesCount}</td>
+      <td style="${cellStyle}">${r.activityCount}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="section-header">
+      <h1>All Data</h1>
+    </div>
+    <p style="color:var(--color-text-muted);font-size:var(--text-sm);margin-bottom:var(--space-4);">
+      Every lead, every field. Click a column header to sort. Search across name / contact / county / website / phone / email.
+      Showing <strong>${rows.length}</strong> of ${state.leads.length} leads.
+    </p>
+    <div style="display:flex;gap:var(--space-3);margin-bottom:var(--space-4);flex-wrap:wrap;">
+      <input type="search" id="all-data-search" placeholder="Search…" value="${escapeHtml(f.search)}"
+             class="form-input" style="max-width:300px;" aria-label="Search all data">
+      <select id="all-data-status" class="form-select" style="max-width:200px;" aria-label="Filter by status">
+        <option value="all"${f.status==='all'?' selected':''}>All statuses</option>
+        <option value="unqualified"${f.status==='unqualified'?' selected':''}>Lead Bank</option>
+        <option value="qualified"${f.status==='qualified'?' selected':''}>Qualified</option>
+        <option value="crm"${f.status==='crm'?' selected':''}>CRM</option>
+        <option value="archive"${f.status==='archive'?' selected':''}>Archived</option>
+      </select>
+    </div>
+    <div style="overflow:auto;max-height:calc(100vh - 280px);border:1px solid var(--color-border);border-radius:var(--radius-md);">
+      <table style="border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;">
+        <thead><tr>${headerHtml}</tr></thead>
+        <tbody>${bodyHtml || `<tr><td colspan="${ALL_DATA_COLS.length}" style="padding:var(--space-6);text-align:center;color:var(--color-text-muted);">No leads match the current filter.</td></tr>`}</tbody>
+      </table>
+    </div>
+  `;
+  lucide.createIcons({ nodes: [container] });
+}
+
+// All Data event delegation
+document.getElementById('section-all-data').addEventListener('click', e => {
+  const sortTarget = e.target.closest('[data-action="all-data-sort"]');
+  if (sortTarget) {
+    const col = sortTarget.dataset.col;
+    if (state.allDataSort.col === col) {
+      state.allDataSort.dir = state.allDataSort.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      state.allDataSort.col = col;
+      state.allDataSort.dir = 'asc';
+    }
+    renderAllData();
+  }
+});
+document.getElementById('section-all-data').addEventListener('input', e => {
+  if (e.target.id === 'all-data-search') {
+    state.filters.allData.search = e.target.value;
+    renderAllData();
+  }
+});
+document.getElementById('section-all-data').addEventListener('change', e => {
+  if (e.target.id === 'all-data-status') {
+    state.filters.allData.status = e.target.value;
+    renderAllData();
+  }
 });
 
 // ========== EMAIL SIGNATURES ==========
