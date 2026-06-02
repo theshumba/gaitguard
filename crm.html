@@ -1033,6 +1033,8 @@ ul, ol { list-style: none; }
 <!-- Toast -->
 <div id="toast-container" role="status" aria-live="polite"></div>
 
+<!-- Crest & Canter leads — auto-loaded once into localStorage on first visit -->
+<script src="cc-bootstrap.js"></script>
 <script>
 // ========== STATE ==========
 const state = {
@@ -7494,9 +7496,37 @@ document.getElementById('chat-save-key').addEventListener('click', () => {
 document.getElementById('chat-test-key').addEventListener('click', testGeminiConnection);
 
 // ========== INIT ==========
+// One-time auto-loader: bake the Crest & Canter leads into localStorage on first
+// visit (cc-bootstrap.js defines window.CC_BOOTSTRAP). Deduped by business name
+// against existing leads; the flag prevents re-adding. Bump VERSION to re-seed.
+function bootstrapCCLeads() {
+  const VERSION = 'cc-2026-06-02';
+  try {
+    if (!Array.isArray(window.CC_BOOTSTRAP) || !window.CC_BOOTSTRAP.length) return;
+    if (localStorage.getItem('cc-bootstrap-done') === VERSION) return;
+    if (!Array.isArray(state.leads)) state.leads = [];
+    const existing = new Set(state.leads.map(l => (l.businessName || '').toLowerCase().trim()));
+    let added = 0;
+    window.CC_BOOTSTRAP.forEach(raw => {
+      try {
+        const lead = normalizeCCLead(raw);
+        const key = (lead.businessName || '').toLowerCase().trim();
+        if (key && existing.has(key)) return;
+        state.leads.push(lead);
+        existing.add(key);
+        added++;
+      } catch (e) { /* skip malformed */ }
+    });
+    if (added) saveState();
+    localStorage.setItem('cc-bootstrap-done', VERSION);
+    console.info('[GaitGuard] CC bootstrap: added ' + added + ' Crest & Canter leads');
+  } catch (e) { console.warn('CC bootstrap failed', e); }
+}
+
 function init() {
   console.info('[GaitGuard] init() — state.leads has', state.leads?.length ?? 'undefined', 'entries on entry');
   try {
+    bootstrapCCLeads();
     // Check if user is already logged in
     if (isLoggedIn()) {
       const user = getCurrentUser();
