@@ -10,3 +10,10 @@ yolov8n.pt
 
 # Local-only lead data (private contact info)
 _local/
+
+# Environment / secrets (added by security hygiene pass)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
