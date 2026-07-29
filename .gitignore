@@ -17,3 +17,7 @@ _local/
 !.env.example
 !.env.sample
 !.env.template
+
+# Local backups of crm.html — these carry old hardcoded API keys.
+# This repo is PUBLIC. Never commit them.
+crm.backup-*.html

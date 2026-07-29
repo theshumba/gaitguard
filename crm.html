@@ -7284,10 +7284,24 @@ function saveChatState() {
     localStorage.setItem('gaitguard-learnings', JSON.stringify(chatLearnings));
   } catch(e) {}
 }
-const DEFAULT_GEMINI_KEY = 'AIzaSyCU9lnXe4Hne3J8tjSEo_X3WuNc-Sfws1s';
+// NEVER put an API key literal in this file.
+//
+// This repo is PUBLIC and this page is served publicly, so anything hardcoded
+// here is readable by anyone who views source. There used to be an embedded
+// default Gemini key on this line "so the chatbot works out of the box".
+// Google's secret scanner found it and disabled the key — which also silently
+// killed every AI feature in Reedr, because it was the same key. Mood search,
+// Read Next and the shelf-photo scanner were all dead for real users until
+// someone worked out why.
+//
+// The key now comes from the browser only. With none stored, sendChatMessage()
+// already sends the user to the settings tab to paste their own.
 function getApiKey() {
-  // Prefer user-stored key, fall back to legacy, then to the embedded default so the chatbot works out of the box.
-  return localStorage.getItem('gaitguard-gemini-key') || localStorage.getItem('gaitguard-api-key') || DEFAULT_GEMINI_KEY;
+  return (
+    localStorage.getItem('gaitguard-gemini-key') ||
+    localStorage.getItem('gaitguard-api-key') ||
+    ''
+  );
 }
 function setApiKey(key) { localStorage.setItem('gaitguard-gemini-key', key); }
 
